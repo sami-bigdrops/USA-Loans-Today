@@ -8,6 +8,166 @@ import Dropdown from '@/app/components/ui/Dropdown';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/RadioGroup';
 import DatePicker from '@/app/components/ui/DatePicker';
 
+// Pure validation helper functions (no side effects, accept values as parameters)
+const getStep5Error = (value: string): string | null => {
+  if (!value || value.length <= 2) return null;
+  const cleanValue = value.replace(/[^0-9.]/g, '');
+  const numValue = parseFloat(cleanValue);
+  if (isNaN(numValue) || numValue < 100 || numValue > 25000) {
+    return 'Monthly income must be between $100 and $25,000';
+  }
+  return null;
+};
+
+const getStep6Error = (value: string): string | null => {
+  if (!value || value.length <= 2) return null;
+  const cleanValue = value.replace(/[^0-9.]/g, '');
+  const numValue = parseFloat(cleanValue);
+  if (isNaN(numValue) || numValue < 1000 || numValue > 100000) {
+    return 'Debt amount must be between $1,000 and $100,000';
+  }
+  return null;
+};
+
+const getStep7Error = (value: string): string | null => {
+  if (!value) return null;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(value)) {
+    return 'Next pay date must be in YYYY-MM-DD format';
+  }
+  return null;
+};
+
+const getStep8Error = (value: string): string | null => {
+  if (!value) return null;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(value)) {
+    return 'Second pay date must be in YYYY-MM-DD format';
+  }
+  return null;
+};
+
+const getStep12Error = (value: string): string | null => {
+  const cleanValue = value.replace(/[^\d]/g, '');
+  if (cleanValue.length !== 9) {
+    return 'Bank routing number must be exactly 9 digits';
+  }
+  return null;
+};
+
+const getStep13Error = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+    return 'Bank name must be between 1 and 255 characters';
+  }
+  return null;
+};
+
+const getStep14Error = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 3 || trimmed.length > 30) {
+    return 'Bank account number must be between 3 and 30 characters';
+  }
+  return null;
+};
+
+const getStep15Error = (zip: string, zipError: string): string | null => {
+  if (!zip || zip.length !== 5) {
+    return 'Zip code must be exactly 5 digits';
+  }
+  if (zipError) {
+    return zipError;
+  }
+  return null;
+};
+
+const getStep16Error = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 2 || trimmed.length > 255) {
+    return 'Address must be between 2 and 255 characters';
+  }
+  return null;
+};
+
+const getStep19Error = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 5 || trimmed.length > 128) {
+    return 'Email must be between 5 and 128 characters';
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmed)) {
+    return 'Please enter a valid email address';
+  }
+  return null;
+};
+
+const getStep21Error = (value: string): string | null => {
+  if (!value) {
+    return 'State is required';
+  }
+  if (value.toUpperCase() === 'NY') {
+    return 'We do not provide service in New York';
+  }
+  return null;
+};
+
+const getStep22Error = (state: string, license: string, stateLicenseFormats: Record<string, number>): string | null => {
+  if (!state || !license) return null;
+  const cleanLicense = license.replace(/[^A-Za-z0-9]/g, '');
+  const maxLength = stateLicenseFormats[state] || 9;
+  if (cleanLicense.length !== maxLength) {
+    return `Please enter a valid ${state} driver's license number (${maxLength} characters)`;
+  }
+  return null;
+};
+
+const getStep25Error = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+    return 'Employer name must be between 1 and 255 characters';
+  }
+  return null;
+};
+
+const getStep33Error = (first: string, last: string): string | null => {
+  const firstNameTrimmed = first.trim();
+  const lastNameTrimmed = last.trim();
+  if (!firstNameTrimmed || firstNameTrimmed.length < 1 || firstNameTrimmed.length > 255) {
+    return 'First name must be between 1 and 255 characters';
+  }
+  if (!lastNameTrimmed || lastNameTrimmed.length < 1 || lastNameTrimmed.length > 255) {
+    return 'Last name must be between 1 and 255 characters';
+  }
+  return null;
+};
+
+const getStep34Error = (value: string): string | null => {
+  if (!value) {
+    return 'Date of birth is required';
+  }
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(value)) {
+    return 'Date of birth must be in YYYY-MM-DD format';
+  }
+  const birthDate = new Date(value);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+  if (actualAge < 18 || actualAge > 100) {
+    return 'Age must be between 18 and 100 years';
+  }
+  return null;
+};
+
+// State-specific license formats and lengths (constant, moved outside component)
+const STATE_LICENSE_FORMATS: Record<string, number> = {
+  'AL': 7, 'AK': 7, 'AZ': 9, 'AR': 9, 'CA': 8, 'CO': 9, 'CT': 9, 'DE': 7, 'FL': 13, 'GA': 9,
+  'HI': 9, 'ID': 9, 'IL': 12, 'IN': 10, 'IA': 9, 'KS': 9, 'KY': 9, 'LA': 9, 'ME': 7, 'MD': 13,
+  'MA': 9, 'MI': 13, 'MN': 13, 'MS': 9, 'MO': 9, 'MT': 13, 'NE': 9, 'NV': 10, 'NH': 10, 'NJ': 15,
+  'NM': 9, 'NC': 12, 'ND': 9, 'OH': 8, 'OK': 9, 'OR': 9, 'PA': 8, 'RI': 7, 'SC': 9, 'SD': 9,
+  'TN': 9, 'TX': 7, 'UT': 9, 'VT': 8, 'VA': 9, 'WA': 12, 'WV': 7, 'WI': 14, 'WY': 9,
+};
 
 const FormPage = () => {
   const TOTAL_STEPS = 38;
@@ -39,6 +199,7 @@ const FormPage = () => {
   const [zipCode, setZipCode] = useState<string>('');
   const [zipCodeError, setZipCodeError] = useState<string>('');
   const [zipCodeCity, setZipCodeCity] = useState<string>('');
+  const [stepValidationErrors, setStepValidationErrors] = useState<Record<number, string>>({});
   const [streetAddress, setStreetAddress] = useState<string>('');
   const [homeOwnership, setHomeOwnership] = useState<string>('');
   const [addressDuration, setAddressDuration] = useState<string>('');
@@ -264,19 +425,8 @@ const FormPage = () => {
     { value: 'WY', label: 'Wyoming' },
   ];
 
-  // State-specific license formats and lengths
-  const stateLicenseFormats: Record<string, number> = {
-    'AL': 7, 'AK': 7, 'AZ': 9, 'AR': 9, 'CA': 8,
-    'CO': 9, 'CT': 9, 'DE': 7, 'FL': 13, 'GA': 9,
-    'HI': 9, 'ID': 9, 'IL': 12, 'IN': 10, 'IA': 9,
-    'KS': 9, 'KY': 9, 'LA': 9, 'ME': 7, 'MD': 13,
-    'MA': 9, 'MI': 13, 'MN': 13, 'MS': 9, 'MO': 9,
-    'MT': 13, 'NE': 9, 'NV': 10, 'NH': 10, 'NJ': 15,
-    'NM': 9, 'NC': 12, 'ND': 9, 'OH': 8,
-    'OK': 9, 'OR': 9, 'PA': 8, 'RI': 7, 'SC': 9,
-    'SD': 9, 'TN': 9, 'TX': 7, 'UT': 9, 'VT': 8,
-    'VA': 9, 'WA': 12, 'WV': 7, 'WI': 14, 'WY': 9
-  };
+  // Use the constant state license formats (defined outside component)
+  const stateLicenseFormats = STATE_LICENSE_FORMATS;
 
   const handleSpendingPurposeChange = (value: string) => {
     setSpendingPurpose(value);
@@ -876,29 +1026,82 @@ const FormPage = () => {
     }
   };
 
-  const isStep5Complete = monthlyIncome && monthlyIncome.length > 2;
-  const isStep6Complete = debtAmount && debtAmount.length > 2;
-  const isStep7Complete = nextPayDate !== '';
-  const isStep8Complete = secondPayDate !== '';
+  // Update validation errors in useEffect to avoid infinite re-renders
+  useEffect(() => {
+    const errors: Record<number, string> = {};
+    
+    const error5 = getStep5Error(monthlyIncome);
+    if (error5) errors[5] = error5;
+    
+    const error6 = getStep6Error(debtAmount);
+    if (error6) errors[6] = error6;
+    
+    const error7 = getStep7Error(nextPayDate);
+    if (error7) errors[7] = error7;
+    
+    const error8 = getStep8Error(secondPayDate);
+    if (error8) errors[8] = error8;
+    
+    const error12 = getStep12Error(bankRoutingNumber);
+    if (error12) errors[12] = error12;
+    
+    const error13 = getStep13Error(bankName);
+    if (error13) errors[13] = error13;
+    
+    const error14 = getStep14Error(bankAccountNumber);
+    if (error14) errors[14] = error14;
+    
+    const error15 = getStep15Error(zipCode, zipCodeError);
+    if (error15) errors[15] = error15;
+    
+    const error16 = getStep16Error(streetAddress);
+    if (error16) errors[16] = error16;
+    
+    const error19 = getStep19Error(email);
+    if (error19) errors[19] = error19;
+    
+    const error21 = getStep21Error(driverLicenseState);
+    if (error21) errors[21] = error21;
+    
+    const error22 = getStep22Error(driverLicenseState, driverLicenseNumber, STATE_LICENSE_FORMATS);
+    if (error22) errors[22] = error22;
+    
+    const error25 = getStep25Error(employer);
+    if (error25) errors[25] = error25;
+    
+    const error33 = getStep33Error(firstName, lastName);
+    if (error33) errors[33] = error33;
+    
+    const error34 = getStep34Error(birthdate);
+    if (error34) errors[34] = error34;
+    
+    setStepValidationErrors(errors);
+  }, [monthlyIncome, debtAmount, nextPayDate, secondPayDate, bankRoutingNumber, bankName, bankAccountNumber, zipCode, zipCodeError, streetAddress, email, driverLicenseState, driverLicenseNumber, employer, firstName, lastName, birthdate]);
+
+  // Step completion checks (pure boolean calculations)
+  const isStep5Complete = monthlyIncome && monthlyIncome.length > 2 && getStep5Error(monthlyIncome) === null;
+  const isStep6Complete = debtAmount && debtAmount.length > 2 && getStep6Error(debtAmount) === null;
+  const isStep7Complete = nextPayDate !== '' && getStep7Error(nextPayDate) === null;
+  const isStep8Complete = secondPayDate !== '' && getStep8Error(secondPayDate) === null;
   const isStep10Complete = hasDirectDeposit === 'no';
   const isStep11Complete = bankAccountDuration !== '';
-  const isStep12Complete = bankRoutingNumber.replace(/[^\d]/g, '').length === 9;
-  const isStep13Complete = bankName.trim() !== '';
-  const isStep14Complete = bankAccountNumber.trim() !== '';
-  const isStep16Complete = streetAddress.trim() !== '';
-  const isStep19Complete = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isStep21Complete = driverLicenseState !== '';
+  const isStep12Complete = bankRoutingNumber.replace(/[^\d]/g, '').length === 9 && getStep12Error(bankRoutingNumber) === null;
+  const isStep13Complete = bankName.trim() !== '' && getStep13Error(bankName) === null;
+  const isStep14Complete = bankAccountNumber.trim() !== '' && getStep14Error(bankAccountNumber) === null;
+  const isStep16Complete = streetAddress.trim() !== '' && getStep16Error(streetAddress) === null;
+  const isStep19Complete = email.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && getStep19Error(email) === null;
+  const isStep21Complete = driverLicenseState !== '' && getStep21Error(driverLicenseState) === null;
   const isStep22Complete = (() => {
     if (!driverLicenseState || !driverLicenseNumber) return false;
     const cleanLicense = driverLicenseNumber.replace(/[^A-Za-z0-9]/g, '');
     const maxLength = stateLicenseFormats[driverLicenseState] || 9;
-    return cleanLicense.length === maxLength;
+    return cleanLicense.length === maxLength && getStep22Error(driverLicenseState, driverLicenseNumber, STATE_LICENSE_FORMATS) === null;
   })();
-  const isStep25Complete = employer.trim() !== '';
+  const isStep25Complete = employer.trim() !== '' && getStep25Error(employer) === null;
   const isStep27Complete = occupation.trim() !== '';
   const isStep28Complete = monthlyHousingPayment && monthlyHousingPayment.length > 2;
-  const isStep33Complete = firstName.trim() !== '' && lastName.trim() !== '';
-  const isStep34Complete = birthdate !== '';
+  const isStep33Complete = firstName.trim() !== '' && lastName.trim() !== '' && getStep33Error(firstName, lastName) === null;
+  const isStep34Complete = birthdate !== '' && getStep34Error(birthdate) === null;
   const isStep35Complete = homePhoneNumber.replace(/[^\d]/g, '').length === 10;
   const isStep36Complete = workPhoneNumber.replace(/[^\d]/g, '').length === 10;
   const isStep37Complete = phoneNumber.replace(/[^\d]/g, '').length === 10;
@@ -2429,6 +2632,13 @@ const FormPage = () => {
                 </div>
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[5] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[5]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -2498,8 +2708,10 @@ const FormPage = () => {
                       border-2 rounded-lg
                       transition-all duration-200
                       focus:outline-none
-                      ${debtAmount && debtAmount.length > 2
+                      ${debtAmount && debtAmount.length > 2 && getStep6Error(debtAmount) === null
                         ? 'border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
+                        : stepValidationErrors[6]
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
                         : 'border-gray-300 focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
                       }
                       text-[--text] font-medium
@@ -2507,6 +2719,13 @@ const FormPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[6] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[6]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -2640,6 +2859,13 @@ const FormPage = () => {
                   maxDate={getSecondPayDateRange().maxDate || undefined}
                 />
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[8] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[8]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -2965,6 +3191,13 @@ const FormPage = () => {
                 </div>
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[12] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[12]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -3038,6 +3271,13 @@ const FormPage = () => {
                 </div>
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[13] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[13]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -3110,6 +3350,13 @@ const FormPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[14] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[14]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -3290,6 +3537,13 @@ const FormPage = () => {
                   <p className="text-sm sm:text-base text-blue-800 font-medium">
                     City: <span className="font-semibold">{zipCodeCity}</span>
                   </p>
+                </div>
+              )}
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[16] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[16]}</p>
                 </div>
               )}
 
@@ -3506,6 +3760,13 @@ const FormPage = () => {
                 )}
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[19] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[19]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -3625,6 +3886,13 @@ const FormPage = () => {
                 />
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[21] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[21]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -3722,6 +3990,13 @@ const FormPage = () => {
                   </p>
                 )}
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[22] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[22]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -3925,6 +4200,13 @@ const FormPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[25] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[25]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -4514,6 +4796,13 @@ const FormPage = () => {
                 </div>
               </div>
 
+              {/* Validation Error Message */}
+              {stepValidationErrors[33] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[33]}</p>
+                </div>
+              )}
+
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -4574,6 +4863,13 @@ const FormPage = () => {
                   minDate={new Date(new Date().getFullYear() - 120, 0, 1)} // Allow up to 120 years ago
                 />
               </div>
+
+              {/* Validation Error Message */}
+              {stepValidationErrors[34] && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{stepValidationErrors[34]}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
