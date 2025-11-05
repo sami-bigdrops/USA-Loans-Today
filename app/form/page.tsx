@@ -1595,6 +1595,161 @@ const FormPage = () => {
     }
   };
 
+  // Validation functions
+  const validateFirstName = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+      return 'First name must be between 1 and 255 characters';
+    }
+    return null;
+  };
+
+  const validateLastName = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+      return 'Last name must be between 1 and 255 characters';
+    }
+    return null;
+  };
+
+  const validateEmail = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 5 || trimmed.length > 128) {
+      return 'Email must be between 5 and 128 characters';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  };
+
+  const validateDOB = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 'Date of birth is required';
+    }
+    // Check format YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(trimmed)) {
+      return 'Date of birth must be in YYYY-MM-DD format';
+    }
+    const birthDate = new Date(trimmed);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+    
+    if (actualAge < 18 || actualAge > 100) {
+      return 'Age must be between 18 and 100 years';
+    }
+    return null;
+  };
+
+  const validateZip = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || !/^\d{5}$/.test(trimmed)) {
+      return 'Zip code must be exactly 5 digits';
+    }
+    return null;
+  };
+
+  const validateCity = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 2 || trimmed.length > 32) {
+      return 'City must be between 2 and 32 characters';
+    }
+    return null;
+  };
+
+  const validateState = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 'State is required';
+    }
+    if (trimmed.toUpperCase() === 'NY') {
+      return 'We do not provide service in New York';
+    }
+    return null;
+  };
+
+  const validateAddress = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 2 || trimmed.length > 255) {
+      return 'Address must be between 2 and 255 characters';
+    }
+    return null;
+  };
+
+  const validateEmployerName = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+      return 'Employer name must be between 1 and 255 characters';
+    }
+    return null;
+  };
+
+  const validateMonthlyIncome = (value: string): string | null => {
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    const numValue = parseFloat(cleanValue);
+    if (isNaN(numValue) || numValue < 100 || numValue > 25000) {
+      return 'Monthly income must be between $100 and $25,000';
+    }
+    return null;
+  };
+
+  const validateDate = (value: string, fieldName: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return `${fieldName} is required`;
+    }
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(trimmed)) {
+      return `${fieldName} must be in YYYY-MM-DD format`;
+    }
+    return null;
+  };
+
+  const validatePhone = (value: string, fieldName: string): string | null => {
+    const cleanValue = value.replace(/\D/g, '');
+    if (!cleanValue || cleanValue.length !== 10) {
+      return `${fieldName} must be 10 digits`;
+    }
+    return null;
+  };
+
+  const validateSSN = (value: string): string | null => {
+    const cleanValue = value.replace(/\D/g, '');
+    if (!cleanValue || cleanValue.length !== 9) {
+      return 'SSN must be 9 digits';
+    }
+    return null;
+  };
+
+  const validateBankRoutingNumber = (value: string): string | null => {
+    const cleanValue = value.replace(/\D/g, '');
+    if (!cleanValue || cleanValue.length !== 9) {
+      return 'Bank routing number must be 9 digits';
+    }
+    return null;
+  };
+
+  const validateBankName = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
+      return 'Bank name must be between 1 and 255 characters';
+    }
+    return null;
+  };
+
+  const validateBankAccountNumber = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 3 || trimmed.length > 30) {
+      return 'Bank account number must be between 3 and 30 characters';
+    }
+    return null;
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
@@ -1606,6 +1761,12 @@ const FormPage = () => {
         const certUrlElement = document.getElementById('xxTrustedFormCertUrl_0') as HTMLInputElement;
         certUrl = certUrlElement?.value || '';
       }
+      
+      // Retrieve loanAmount from localStorage
+      const STORAGE_KEY = 'usa-loans-selected-amount';
+      const loanAmount = typeof window !== 'undefined' 
+        ? localStorage.getItem(STORAGE_KEY) || '' 
+        : '';
       
       // Clean phone numbers (remove formatting)
       const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -1620,61 +1781,147 @@ const FormPage = () => {
       // Clean SSN (remove dashes)
       const cleanSsn = ssn.replace(/\D/g, '');
       
-      // Prepare all form data
+      // Validate all fields
+      const validationErrors: string[] = [];
+      
+      // Validate required fields
+      if (!loanAmount) validationErrors.push('Loan amount is required');
+      
+      const firstNameError = validateFirstName(firstName);
+      if (firstNameError) validationErrors.push(firstNameError);
+      
+      const lastNameError = validateLastName(lastName);
+      if (lastNameError) validationErrors.push(lastNameError);
+      
+      const emailError = validateEmail(email);
+      if (emailError) validationErrors.push(emailError);
+      
+      const dobError = validateDOB(birthdate);
+      if (dobError) validationErrors.push(dobError);
+      
+      const zipError = validateZip(zipCode);
+      if (zipError) validationErrors.push(zipError);
+      
+      const cityError = validateCity(zipCodeCity);
+      if (cityError) validationErrors.push(cityError);
+      
+      const stateError = validateState(driverLicenseState);
+      if (stateError) validationErrors.push(stateError);
+      
+      const addressError = validateAddress(streetAddress);
+      if (addressError) validationErrors.push(addressError);
+      
+      const cellPhoneError = validatePhone(phoneNumber, 'Cell phone');
+      if (cellPhoneError) validationErrors.push(cellPhoneError);
+      
+      const homePhoneError = validatePhone(homePhoneNumber, 'Home phone');
+      if (homePhoneError) validationErrors.push(homePhoneError);
+      
+      const workPhoneError = validatePhone(workPhoneNumber, 'Work phone');
+      if (workPhoneError) validationErrors.push(workPhoneError);
+      
+      const ssnError = validateSSN(ssn);
+      if (ssnError) validationErrors.push(ssnError);
+      
+      const employerNameError = validateEmployerName(employer);
+      if (employerNameError) validationErrors.push(employerNameError);
+      
+      // Validate military (should be yes/no, will map to 1/0)
+      if (!isMilitaryMember || (isMilitaryMember !== 'yes' && isMilitaryMember !== 'no')) {
+        validationErrors.push('Military status is required');
+      }
+      
+      const monthlyIncomeError = validateMonthlyIncome(monthlyIncome);
+      if (monthlyIncomeError) validationErrors.push(monthlyIncomeError);
+      
+      const nextPayDateError = validateDate(nextPayDate, 'Next pay date');
+      if (nextPayDateError) validationErrors.push(nextPayDateError);
+      
+      const secondPayDateError = validateDate(secondPayDate, 'Second pay date');
+      if (secondPayDateError) validationErrors.push(secondPayDateError);
+      
+      // Validate payType (should be direct_deposit or check)
+      if (!hasDirectDeposit || (hasDirectDeposit !== 'yes' && hasDirectDeposit !== 'no')) {
+        validationErrors.push('Pay type is required');
+      }
+      
+      const bankRoutingError = validateBankRoutingNumber(bankRoutingNumber);
+      if (bankRoutingError) validationErrors.push(bankRoutingError);
+      
+      const bankNameError = validateBankName(bankName);
+      if (bankNameError) validationErrors.push(bankNameError);
+      
+      const bankAccountNumberError = validateBankAccountNumber(bankAccountNumber);
+      if (bankAccountNumberError) validationErrors.push(bankAccountNumberError);
+      
+      // Validate bankAccountType (should be checking or saving)
+      if (!hasCheckingAccount || (hasCheckingAccount !== 'yes' && hasCheckingAccount !== 'no')) {
+        validationErrors.push('Bank account type is required');
+      }
+      
+      // If there are validation errors, show them and stop submission
+      if (validationErrors.length > 0) {
+        alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Prepare all form data - matching payload variable names
       const formData = {
         // Personal Information
+        loanAmount: loanAmount.trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
-        birthdate: birthdate.trim(),
+        dob: birthdate.trim(),
         ssn: cleanSsn,
-        phoneNumber: cleanPhone,
-        homePhoneNumber: cleanHomePhone,
-        workPhoneNumber: cleanWorkPhone,
         
         // Address Information
-        streetAddress: streetAddress.trim(),
-        zipCode: zipCode.trim(),
-        zipCodeCity: zipCodeCity.trim(),
+        zip: zipCode.trim(),
+        city: zipCodeCity.trim(),
+        state: driverLicenseState.trim(),
+        address: streetAddress.trim(),
+        monthsAtAddress: addressDuration.trim(),
         homeOwnership: homeOwnership.trim(),
-        addressDuration: addressDuration.trim(),
         
-        // Financial Information
-        spendingPurpose: spendingPurpose.trim(),
-        creditScore: creditScore.trim(),
-        employmentStatus: employmentStatus.trim(),
-        paymentFrequency: paymentFrequency.trim(),
+        // Driver's License
+        driversLicense: driverLicenseNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase(),
+        driversLicenseState: driverLicenseState.trim(),
+        
+        // Phone Information
+        cellPhone: cleanPhone,
+        homePhone: cleanHomePhone,
+        workPhone: cleanWorkPhone,
+        
+        // Employment Information
+        employmentType: employmentStatus.trim(),
+        employerName: employer.trim(),
+        monthsEmployed: employerDuration.trim(),
+        military: isMilitaryMember === 'yes' ? '1' : '0', // Map yes/no to 1/0
+        
+        // Income Information
         monthlyIncome: cleanMonthlyIncome,
-        debtAmount: cleanDebtAmount,
+        payFrequency: paymentFrequency.trim(),
         nextPayDate: nextPayDate.trim(),
         secondPayDate: secondPayDate.trim(),
-        unsecuredDebtAmount: unsecuredDebtAmount.trim(),
-        monthlyHousingPayment: cleanMonthlyHousingPayment,
+        payType: hasDirectDeposit === 'yes' ? 'direct_deposit' : 'check', // Map hasDirectDeposit to payType
         
         // Banking Information
-        hasCheckingAccount: hasCheckingAccount.trim(),
-        hasDirectDeposit: hasDirectDeposit.trim(),
-        bankAccountDuration: bankAccountDuration.trim(),
         bankRoutingNumber: bankRoutingNumber.replace(/\D/g, ''),
         bankName: bankName.trim(),
         bankAccountNumber: bankAccountNumber.trim(),
+        bankAccountType: hasCheckingAccount === 'yes' ? 'checking' : 'saving', // Map yes/no to checking/saving
+        monthsAtBank: bankAccountDuration.trim(),
         
-        // Employment Information
-        employer: employer.trim(),
-        employerDuration: employerDuration.trim(),
+        // Additional fields (not in user's list but needed for API)
+        spendingPurpose: spendingPurpose.trim(),
+        creditScore: creditScore.trim(),
+        debtAmount: cleanDebtAmount,
+        unsecuredDebtAmount: unsecuredDebtAmount.trim(),
+        monthlyHousingPayment: cleanMonthlyHousingPayment,
+        hasDirectDeposit: hasDirectDeposit.trim(),
         occupation: occupation.trim(),
-        
-        // Vehicle Information
         vehicleStatus: vehicleStatus.trim(),
-        
-        // Driver's License Information
-        driverLicenseState: driverLicenseState.trim(),
-        driverLicenseNumber: driverLicenseNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase(),
-        
-        // Military Status
-        isMilitaryMember: isMilitaryMember.trim(),
-        
-        // Bankruptcy Information
         hasFiledBankruptcy: hasFiledBankruptcy.trim(),
         bankruptcyChapter: bankruptcyChapter.trim(),
         bankruptcyStatus: bankruptcyStatus.trim(),

@@ -5,69 +5,390 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Extract all form fields
+    // Extract all form fields - matching payload variable names
     const {
+      loanAmount,
       firstName,
       lastName,
       email,
-      phoneNumber,
-      homePhoneNumber,
-      workPhoneNumber,
-      zipCode,
+      dob,
+      zip,
+      city,
+      state,
+      address,
+      monthsAtAddress,
       homeOwnership,
-      debtAmount,
+      driversLicense,
+      driversLicenseState,
+      cellPhone,
+      homePhone,
+      ssn,
+      employmentType,
+      employerName,
+      military,
+      monthsEmployed,
+      monthlyIncome,
+      payFrequency,
+      nextPayDate,
+      secondPayDate,
+      workPhone,
+      payType,
+      bankRoutingNumber,
+      bankName,
+      bankAccountNumber,
+      bankAccountType,
+      monthsAtBank,
+      // Additional fields (for backward compatibility and LeadProsper)
       subid1,
       subid2,
       subid3,
       trustedformCertUrl,
-      // Additional fields
-      birthdate,
-      ssn,
-      streetAddress,
-      zipCodeCity,
-      addressDuration,
       spendingPurpose,
       creditScore,
-      employmentStatus,
-      paymentFrequency,
-      monthlyIncome,
-      nextPayDate,
-      secondPayDate,
+      debtAmount,
       unsecuredDebtAmount,
       monthlyHousingPayment,
-      hasCheckingAccount,
       hasDirectDeposit,
-      bankAccountDuration,
-      bankRoutingNumber,
-      bankName,
-      bankAccountNumber,
-      employer,
-      employerDuration,
       occupation,
       vehicleStatus,
-      driverLicenseState,
-      driverLicenseNumber,
-      isMilitaryMember,
       hasFiledBankruptcy,
       bankruptcyChapter,
       bankruptcyStatus,
       bankruptcyDischargedInLast2Years,
+      // Backward compatibility mappings
+      phoneNumber,
+      homePhoneNumber,
+      workPhoneNumber,
+      zipCode,
+      zipCodeCity,
+      birthdate,
+      streetAddress,
+      addressDuration,
+      employmentStatus,
+      paymentFrequency: oldPaymentFrequency,
+      hasCheckingAccount,
+      bankAccountDuration,
+      employer,
+      employerDuration,
+      driverLicenseState: oldDriverLicenseState,
+      driverLicenseNumber,
+      isMilitaryMember,
     } = body
 
-    // Validate required fields (use phoneNumber as primary phone, fallback to phone for backward compatibility)
-    const phone = phoneNumber || body.phone || '';
+    // Map to internal variables for processing
+    const phone = cellPhone || phoneNumber || body.phone || '';
     const homeOwner = homeOwnership || body.homeOwner || '';
+    const driverLicenseStateValue = state || driversLicenseState || oldDriverLicenseState || '';
+    const driverLicenseNumberValue = driversLicense || driverLicenseNumber || '';
+    const employmentStatusValue = employmentType || employmentStatus || '';
+    const employerValue = employerName || employer || '';
+    const employerDurationValue = monthsEmployed || employerDuration || '';
+    const isMilitaryMemberValue = military || isMilitaryMember || '';
+    const birthdateValue = dob || birthdate || '';
+    const zipCodeValue = zip || zipCode || '';
+    const zipCodeCityValue = city || zipCodeCity || '';
+    const streetAddressValue = address || streetAddress || '';
+    const addressDurationValue = monthsAtAddress || addressDuration || '';
+    const paymentFrequencyValue = payFrequency || payType || oldPaymentFrequency || '';
+    const homePhoneValue = homePhone || homePhoneNumber || '';
+    const workPhoneValue = workPhone || workPhoneNumber || '';
+    const bankAccountDurationValue = monthsAtBank || bankAccountDuration || '';
+    const hasCheckingAccountValue = bankAccountType || hasCheckingAccount || '';
 
-    if (!firstName || !lastName || !email || !phone || !zipCode || !homeOwner || !debtAmount) {
+    // Validation functions
+    const validateLength = (value: string, min: number, max: number, fieldName: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (trimmed.length < min || trimmed.length > max) {
+        return `${fieldName} must be between ${min} and ${max} characters`;
+      }
+      return null;
+    };
+
+    const validateEmail = (value: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (trimmed.length < 5 || trimmed.length > 128) {
+        return 'Email must be between 5 and 128 characters';
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) {
+        return 'Please enter a valid email address';
+      }
+      return null;
+    };
+
+    const validateDOB = (value: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (!trimmed) return 'Date of birth is required';
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(trimmed)) {
+        return 'Date of birth must be in YYYY-MM-DD format';
+      }
+      const birthDate = new Date(trimmed);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+      if (actualAge < 18 || actualAge > 100) {
+        return 'Age must be between 18 and 100 years';
+      }
+      return null;
+    };
+
+    const validateZip = (value: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (!trimmed || !/^\d{5}$/.test(trimmed)) {
+        return 'Zip code must be exactly 5 digits';
+      }
+      return null;
+    };
+
+    const validateState = (value: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (!trimmed) return 'State is required';
+      if (trimmed.toUpperCase() === 'NY') {
+        return 'We do not provide service in New York';
+      }
+      return null;
+    };
+
+    const validatePhone = (value: string, fieldName: string): string | null => {
+      const cleanValue = value?.replace(/\D/g, '') || '';
+      if (!cleanValue || cleanValue.length !== 10) {
+        return `${fieldName} must be 10 digits`;
+      }
+      return null;
+    };
+
+    const validateSSN = (value: string): string | null => {
+      const cleanValue = value?.replace(/\D/g, '') || '';
+      if (!cleanValue || cleanValue.length !== 9) {
+        return 'SSN must be 9 digits';
+      }
+      return null;
+    };
+
+    const validateDate = (value: string, fieldName: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (!trimmed) return `${fieldName} is required`;
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(trimmed)) {
+        return `${fieldName} must be in YYYY-MM-DD format`;
+      }
+      return null;
+    };
+
+    const validateMonthlyIncome = (value: string): string | null => {
+      const cleanValue = (value || '').replace(/[^0-9.]/g, '');
+      const numValue = parseFloat(cleanValue);
+      if (isNaN(numValue) || numValue < 100 || numValue > 25000) {
+        return 'Monthly income must be between $100 and $25,000';
+      }
+      return null;
+    };
+
+    const validateBankRoutingNumber = (value: string): string | null => {
+      const cleanValue = value?.replace(/\D/g, '') || '';
+      if (!cleanValue || cleanValue.length !== 9) {
+        return 'Bank routing number must be 9 digits';
+      }
+      return null;
+    };
+
+    const validateBankAccountNumber = (value: string): string | null => {
+      const trimmed = value?.trim() || '';
+      if (!trimmed || trimmed.length < 3 || trimmed.length > 30) {
+        return 'Bank account number must be between 3 and 30 characters';
+      }
+      return null;
+    };
+
+    // Validate all fields
+    const validationErrors: string[] = [];
+    
+    // Validate required fields and field formats
+    if (!firstName) validationErrors.push('First name is required');
+    else {
+      const error = validateLength(firstName, 1, 255, 'First name');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!lastName) validationErrors.push('Last name is required');
+    else {
+      const error = validateLength(lastName, 1, 255, 'Last name');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!email) validationErrors.push('Email is required');
+    else {
+      const error = validateEmail(email);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!birthdateValue) validationErrors.push('Date of birth is required');
+    else {
+      const error = validateDOB(birthdateValue);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!zipCodeValue) validationErrors.push('Zip code is required');
+    else {
+      const error = validateZip(zipCodeValue);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!zipCodeCityValue) validationErrors.push('City is required');
+    else {
+      const error = validateLength(zipCodeCityValue, 2, 32, 'City');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!driverLicenseStateValue) validationErrors.push('State is required');
+    else {
+      const error = validateState(driverLicenseStateValue);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!streetAddressValue) validationErrors.push('Address is required');
+    else {
+      const error = validateLength(streetAddressValue, 2, 255, 'Address');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!phone) validationErrors.push('Cell phone is required');
+    else {
+      const error = validatePhone(phone, 'Cell phone');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (homePhoneValue) {
+      const error = validatePhone(homePhoneValue, 'Home phone');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (workPhoneValue) {
+      const error = validatePhone(workPhoneValue, 'Work phone');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!ssn) validationErrors.push('SSN is required');
+    else {
+      const error = validateSSN(ssn);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!employerValue) validationErrors.push('Employer name is required');
+    else {
+      const error = validateLength(employerValue, 1, 255, 'Employer name');
+      if (error) validationErrors.push(error);
+    }
+    
+    // Validate military (should be 1 or 0)
+    const militaryValue = body.military || isMilitaryMemberValue;
+    if (militaryValue !== '1' && militaryValue !== '0' && militaryValue !== 'yes' && militaryValue !== 'no') {
+      validationErrors.push('Military status must be 1 or 0');
+    }
+    
+    if (!monthlyIncome) validationErrors.push('Monthly income is required');
+    else {
+      const error = validateMonthlyIncome(monthlyIncome);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!nextPayDate) validationErrors.push('Next pay date is required');
+    else {
+      const error = validateDate(nextPayDate, 'Next pay date');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!secondPayDate) validationErrors.push('Second pay date is required');
+    else {
+      const error = validateDate(secondPayDate, 'Second pay date');
+      if (error) validationErrors.push(error);
+    }
+    
+    // Validate payType (should be direct_deposit or check)
+    const payTypeValue = body.payType || (hasDirectDeposit === 'yes' ? 'direct_deposit' : 'check');
+    if (payTypeValue !== 'direct_deposit' && payTypeValue !== 'check') {
+      validationErrors.push('Pay type must be direct_deposit or check');
+    }
+    
+    if (!bankRoutingNumber) validationErrors.push('Bank routing number is required');
+    else {
+      const error = validateBankRoutingNumber(bankRoutingNumber);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!bankName) validationErrors.push('Bank name is required');
+    else {
+      const error = validateLength(bankName, 1, 255, 'Bank name');
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!bankAccountNumber) validationErrors.push('Bank account number is required');
+    else {
+      const error = validateBankAccountNumber(bankAccountNumber);
+      if (error) validationErrors.push(error);
+    }
+    
+    // Validate bankAccountType (should be checking or saving)
+    const bankAccountTypeValue = body.bankAccountType || (hasCheckingAccountValue === 'yes' ? 'checking' : 'saving');
+    if (bankAccountTypeValue !== 'checking' && bankAccountTypeValue !== 'saving') {
+      validationErrors.push('Bank account type must be checking or saving');
+    }
+    
+    // If there are validation errors, return them
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { 
+          error: 'Validation failed', 
+          validationErrors,
+          missingFields: validationErrors
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields using mapped values
+    if (!firstName || !lastName || !email || !phone || !zipCodeValue || !homeOwner || !debtAmount || !birthdateValue || !ssn || !streetAddressValue || !zipCodeCityValue || !addressDurationValue || !spendingPurpose || !creditScore || !employmentStatusValue || !paymentFrequencyValue || !monthlyIncome || !nextPayDate || !secondPayDate || !unsecuredDebtAmount || !monthlyHousingPayment || !hasCheckingAccountValue || !hasDirectDeposit || !bankAccountDurationValue || !bankRoutingNumber || !bankName || !bankAccountNumber || !employerValue || !employerDurationValue || !occupation || !vehicleStatus || !driverLicenseStateValue || !driverLicenseNumberValue || !isMilitaryMemberValue || !hasFiledBankruptcy || !bankruptcyChapter || !bankruptcyStatus || !bankruptcyDischargedInLast2Years) {
       const missingFields = [];
       if (!firstName) missingFields.push('firstName');
       if (!lastName) missingFields.push('lastName');
       if (!email) missingFields.push('email');
-      if (!phone) missingFields.push('phoneNumber');
-      if (!zipCode) missingFields.push('zipCode');
+      if (!phone) missingFields.push('cellPhone');
+      if (!zipCodeValue) missingFields.push('zip');
       if (!homeOwner) missingFields.push('homeOwnership');
       if (!debtAmount) missingFields.push('debtAmount');
-      
+      if (!birthdateValue) missingFields.push('dob');
+      if (!ssn) missingFields.push('ssn');
+      if (!streetAddressValue) missingFields.push('address');
+      if (!zipCodeCityValue) missingFields.push('city');
+      if (!addressDurationValue) missingFields.push('monthsAtAddress');
+      if (!spendingPurpose) missingFields.push('spendingPurpose');
+      if (!creditScore) missingFields.push('creditScore');
+      if (!employmentStatusValue) missingFields.push('employmentType');
+      if (!paymentFrequencyValue) missingFields.push('payFrequency');
+      if (!monthlyIncome) missingFields.push('monthlyIncome');
+      if (!nextPayDate) missingFields.push('nextPayDate');
+      if (!secondPayDate) missingFields.push('secondPayDate');
+      if (!unsecuredDebtAmount) missingFields.push('unsecuredDebtAmount');
+      if (!monthlyHousingPayment) missingFields.push('monthlyHousingPayment');
+      if (!hasCheckingAccountValue) missingFields.push('bankAccountType');
+      if (!hasDirectDeposit) missingFields.push('hasDirectDeposit');
+      if (!bankAccountDurationValue) missingFields.push('monthsAtBank');
+      if (!bankRoutingNumber) missingFields.push('bankRoutingNumber');
+      if (!bankName) missingFields.push('bankName');
+      if (!bankAccountNumber) missingFields.push('bankAccountNumber');
+      if (!employerValue) missingFields.push('employerName');
+      if (!employerDurationValue) missingFields.push('monthsEmployed');
+      if (!occupation) missingFields.push('occupation');
+      if (!vehicleStatus) missingFields.push('vehicleStatus');
+      if (!driverLicenseStateValue) missingFields.push('state');
+      if (!driverLicenseNumberValue) missingFields.push('driversLicense');
+      if (!isMilitaryMemberValue) missingFields.push('military');
+      if (!hasFiledBankruptcy) missingFields.push('hasFiledBankruptcy');
+      if (!bankruptcyChapter) missingFields.push('bankruptcyChapter');
+      if (!bankruptcyStatus) missingFields.push('bankruptcyStatus');
+      if (!bankruptcyDischargedInLast2Years) missingFields.push('bankruptcyDischargedInLast2Years');
       return NextResponse.json(
         { error: 'All required fields are missing', missingFields },
         { status: 400 }
@@ -103,13 +424,14 @@ export async function POST(request: NextRequest) {
       lp_subid1: subid1 || '',
       lp_subid2: subid2 || '',
       lp_subid3: subid3 || '',
+      // Map to LeadProsper format using mapped values
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       email: email.trim(),
       phone: phone.replace(/\D/g, ''),
-      home_phone: homePhoneNumber?.replace(/\D/g, '') || '',
-      work_phone: workPhoneNumber?.replace(/\D/g, '') || '',
-      zip_code: zipCode.trim(),
+      home_phone: homePhoneValue.replace(/\D/g, ''),
+      work_phone: workPhoneValue.replace(/\D/g, ''),
+      zip_code: zipCodeValue.trim(),
       debt_amount: debtAmount.trim(),
       home_owner: homeOwner.trim(),
       ip_address: ip,
@@ -117,37 +439,38 @@ export async function POST(request: NextRequest) {
       landing_page_url: request.headers.get('referer') || '',
       trustedform_cert_url: trustedformCertUrl || '',
       // Additional form fields
-      birthdate: birthdate || '',
+      birthdate: birthdateValue || '',
       ssn: ssn || '',
-      street_address: streetAddress || '',
-      zip_code_city: zipCodeCity || '',
-      address_duration: addressDuration || '',
+      street_address: streetAddressValue || '',
+      zip_code_city: zipCodeCityValue || '',
+      address_duration: addressDurationValue || '',
       spending_purpose: spendingPurpose || '',
       credit_score: creditScore || '',
-      employment_status: employmentStatus || '',
-      payment_frequency: paymentFrequency || '',
+      employment_status: employmentStatusValue || '',
+      payment_frequency: paymentFrequencyValue || '',
       monthly_income: monthlyIncome || '',
       next_pay_date: nextPayDate || '',
       second_pay_date: secondPayDate || '',
       unsecured_debt_amount: unsecuredDebtAmount || '',
       monthly_housing_payment: monthlyHousingPayment || '',
-      has_checking_account: hasCheckingAccount || '',
+      has_checking_account: hasCheckingAccountValue || '',
       has_direct_deposit: hasDirectDeposit || '',
-      bank_account_duration: bankAccountDuration || '',
+      bank_account_duration: bankAccountDurationValue || '',
       bank_routing_number: bankRoutingNumber || '',
       bank_name: bankName || '',
       bank_account_number: bankAccountNumber || '',
-      employer: employer || '',
-      employer_duration: employerDuration || '',
+      employer: employerValue || '',
+      employer_duration: employerDurationValue || '',
       occupation: occupation || '',
       vehicle_status: vehicleStatus || '',
-      driver_license_state: driverLicenseState || '',
-      driver_license_number: driverLicenseNumber || '',
-      is_military_member: isMilitaryMember || '',
+      driver_license_state: driverLicenseStateValue || '',
+      driver_license_number: driverLicenseNumberValue || '',
+      is_military_member: isMilitaryMemberValue || '',
       has_filed_bankruptcy: hasFiledBankruptcy || '',
       bankruptcy_chapter: bankruptcyChapter || '',
       bankruptcy_status: bankruptcyStatus || '',
       bankruptcy_discharged_in_last_2_years: bankruptcyDischargedInLast2Years || '',
+      loan_amount: loanAmount || '',
     };
 
     // Log form submission for monitoring (production logging)
