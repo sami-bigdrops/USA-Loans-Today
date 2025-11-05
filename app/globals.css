@@ -1,26 +1,325 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --blue: #313863;
+  --red: #D42C30;
+  --white: #FFFFFF;
+  --placeholder: #888888;
+  --text: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Legal Pages Styles - Reusable for Terms, Privacy Policy, Disclaimer, Ad Disclosure, etc. */
+#terms-and-conditions,
+#privacy-policy,
+#disclaimer,
+#ad-disclosure {
+  min-height: calc(100vh - 200px);
+  background-color: #f9fafb;
+  padding: 2rem 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (min-width: 768px) {
+  #terms-and-conditions,
+  #privacy-policy,
+  #disclaimer,
+  #ad-disclosure {
+    padding: 3rem 2rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (min-width: 1024px) {
+  #terms-and-conditions,
+  #privacy-policy,
+  #disclaimer,
+  #ad-disclosure {
+    padding: 4rem 3rem;
+  }
+}
+
+#terms-and-conditions .container,
+#privacy-policy .container,
+#disclaimer .container,
+#ad-disclosure .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+#terms-and-conditions .legal-content,
+#privacy-policy .legal-content,
+#disclaimer .legal-content,
+#ad-disclosure .legal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-content,
+  #privacy-policy .legal-content,
+  #disclaimer .legal-content,
+  #ad-disclosure .legal-content {
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  #terms-and-conditions .legal-content,
+  #privacy-policy .legal-content,
+  #disclaimer .legal-content,
+  #ad-disclosure .legal-content {
+    padding: 4rem;
+  }
+}
+
+#terms-and-conditions .legal-title,
+#privacy-policy .legal-title,
+#disclaimer .legal-title,
+#ad-disclosure .legal-title {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+#terms-and-conditions .legal-title h1,
+#privacy-policy .legal-title h1,
+#disclaimer .legal-title h1,
+#ad-disclosure .legal-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-title h1,
+  #privacy-policy .legal-title h1,
+  #disclaimer .legal-title h1,
+  #ad-disclosure .legal-title h1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  #terms-and-conditions .legal-title h1,
+  #privacy-policy .legal-title h1,
+  #disclaimer .legal-title h1,
+  #ad-disclosure .legal-title h1 {
+    font-size: 3rem;
+  }
+}
+
+#terms-and-conditions .legal-description,
+#privacy-policy .legal-description,
+#disclaimer .legal-description,
+#ad-disclosure .legal-description {
+  color: #374151;
+  line-height: 1.75;
+}
+
+#terms-and-conditions .legal-description p,
+#privacy-policy .legal-description p,
+#disclaimer .legal-description p,
+#ad-disclosure .legal-description p {
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description p,
+  #privacy-policy .legal-description p,
+  #disclaimer .legal-description p,
+  #ad-disclosure .legal-description p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+#terms-and-conditions .legal-description p strong,
+#privacy-policy .legal-description p strong,
+#disclaimer .legal-description p strong,
+#ad-disclosure .legal-description p strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+#terms-and-conditions .legal-description a,
+#privacy-policy .legal-description a,
+#disclaimer .legal-description a,
+#ad-disclosure .legal-description a {
+  color: #003995;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+#terms-and-conditions .legal-description a:hover,
+#privacy-policy .legal-description a:hover,
+#disclaimer .legal-description a:hover,
+#ad-disclosure .legal-description a:hover {
+  color: #F31B47;
+  text-decoration: underline;
+}
+
+#terms-and-conditions .legal-description ol,
+#privacy-policy .legal-description ol,
+#disclaimer .legal-description ol,
+#ad-disclosure .legal-description ol {
+  margin: 1.5rem 0;
+  padding-left: 2rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description ol,
+  #privacy-policy .legal-description ol,
+  #disclaimer .legal-description ol,
+  #ad-disclosure .legal-description ol {
+    padding-left: 2.5rem;
+  }
+}
+
+#terms-and-conditions .legal-description ol li,
+#privacy-policy .legal-description ol li,
+#disclaimer .legal-description ol li,
+#ad-disclosure .legal-description ol li {
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description ol li,
+  #privacy-policy .legal-description ol li,
+  #disclaimer .legal-description ol li,
+  #ad-disclosure .legal-description ol li {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+}
+
+#terms-and-conditions .legal-description ol li p,
+#privacy-policy .legal-description ol li p,
+#disclaimer .legal-description ol li p,
+#ad-disclosure .legal-description ol li p {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+#terms-and-conditions .legal-description ol li p#e-consent,
+#terms-and-conditions .legal-description ol li p#credit-authorization,
+#privacy-policy .legal-description ol li p#e-consent,
+#privacy-policy .legal-description ol li p#credit-authorization,
+#disclaimer .legal-description ol li p#e-consent,
+#disclaimer .legal-description ol li p#credit-authorization,
+#ad-disclosure .legal-description ol li p#e-consent,
+#ad-disclosure .legal-description ol li p#credit-authorization {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+#terms-and-conditions .legal-description h2,
+#privacy-policy .legal-description h2,
+#disclaimer .legal-description h2,
+#ad-disclosure .legal-description h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #003995;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description h2,
+  #privacy-policy .legal-description h2,
+  #disclaimer .legal-description h2,
+  #ad-disclosure .legal-description h2 {
+    font-size: 1.75rem;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+  }
+}
+
+#terms-and-conditions .legal-description h3,
+#privacy-policy .legal-description h3,
+#disclaimer .legal-description h3,
+#ad-disclosure .legal-description h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description h3,
+  #privacy-policy .legal-description h3,
+  #disclaimer .legal-description h3,
+  #ad-disclosure .legal-description h3 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+#terms-and-conditions .legal-description ul,
+#privacy-policy .legal-description ul,
+#disclaimer .legal-description ul,
+#ad-disclosure .legal-description ul {
+  margin: 1.25rem 0;
+  padding-left: 2rem;
+  list-style-type: disc;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description ul,
+  #privacy-policy .legal-description ul,
+  #disclaimer .legal-description ul,
+  #ad-disclosure .legal-description ul {
+    padding-left: 2.5rem;
+    margin: 1.5rem 0;
+  }
+}
+
+#terms-and-conditions .legal-description ul li,
+#privacy-policy .legal-description ul li,
+#disclaimer .legal-description ul li,
+#ad-disclosure .legal-description ul li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 768px) {
+  #terms-and-conditions .legal-description ul li,
+  #privacy-policy .legal-description ul li,
+  #disclaimer .legal-description ul li,
+  #ad-disclosure .legal-description ul li {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+#terms-and-conditions .legal-description ul ul,
+#privacy-policy .legal-description ul ul,
+#disclaimer .legal-description ul ul,
+#ad-disclosure .legal-description ul ul {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  list-style-type: circle;
+}
+
+#terms-and-conditions .legal-description ul ul ul,
+#privacy-policy .legal-description ul ul ul,
+#disclaimer .legal-description ul ul ul,
+#ad-disclosure .legal-description ul ul ul {
+  list-style-type: square;
+}
+
+#terms-and-conditions .legal-description i,
+#privacy-policy .legal-description i,
+#disclaimer .legal-description i,
+#ad-disclosure .legal-description i {
+  font-style: italic;
+  color: #111827;
 }
