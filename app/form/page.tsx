@@ -1,242 +1,161 @@
 'use client';
 
 import TrustedForm from '@/app/ult/components/TrustedForm';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import ProgressBar from '@/app/components/ui/ProgressBar';
 import Dropdown from '@/app/components/ui/Dropdown';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/RadioGroup';
 import DatePicker from '@/app/components/ui/DatePicker';
-
-// Pure validation helper functions (no side effects, accept values as parameters)
-const getStep5Error = (value: string): string | null => {
-  if (!value || value.length <= 2) return null;
-  const cleanValue = value.replace(/[^0-9.]/g, '');
-  const numValue = parseFloat(cleanValue);
-  if (isNaN(numValue) || numValue < 100 || numValue > 25000) {
-    return 'Monthly income must be between $100 and $25,000';
-  }
-  return null;
-};
-
-const getStep6Error = (value: string): string | null => {
-  if (!value || value.length <= 2) return null;
-  const cleanValue = value.replace(/[^0-9.]/g, '');
-  const numValue = parseFloat(cleanValue);
-  if (isNaN(numValue) || numValue < 1000 || numValue > 100000) {
-    return 'Debt amount must be between $1,000 and $100,000';
-  }
-  return null;
-};
-
-const getStep7Error = (value: string): string | null => {
-  if (!value) return null;
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(value)) {
-    return 'Next pay date must be in YYYY-MM-DD format';
-  }
-  return null;
-};
-
-const getStep8Error = (value: string): string | null => {
-  if (!value) return null;
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(value)) {
-    return 'Second pay date must be in YYYY-MM-DD format';
-  }
-  return null;
-};
-
-const getStep12Error = (value: string): string | null => {
-  const cleanValue = value.replace(/[^\d]/g, '');
-  if (cleanValue.length !== 9) {
-    return 'Bank routing number must be exactly 9 digits';
-  }
-  return null;
-};
-
-const getStep13Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
-    return 'Bank name must be between 1 and 255 characters';
-  }
-  return null;
-};
-
-const getStep14Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 3 || trimmed.length > 30) {
-    return 'Bank account number must be between 3 and 30 characters';
-  }
-  return null;
-};
-
-const getStep15Error = (zip: string, zipError: string): string | null => {
-  if (!zip || zip.length !== 5) {
-    return 'Zip code must be exactly 5 digits';
-  }
-  if (zipError) {
-    return zipError;
-  }
-  return null;
-};
-
-const getStep16Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 2 || trimmed.length > 255) {
-    return 'Address must be between 2 and 255 characters';
-  }
-  return null;
-};
-
-const getStep19Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 5 || trimmed.length > 128) {
-    return 'Email must be between 5 and 128 characters';
-  }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(trimmed)) {
-    return 'Please enter a valid email address';
-  }
-  return null;
-};
-
-const getStep21Error = (value: string): string | null => {
-  if (!value) {
-    return 'State is required';
-  }
-  if (value.toUpperCase() === 'NY') {
-    return 'We do not provide service in New York';
-  }
-  return null;
-};
-
-const getStep22Error = (state: string, license: string, stateLicenseFormats: Record<string, number>): string | null => {
-  if (!state || !license) return null;
-  const cleanLicense = license.replace(/[^A-Za-z0-9]/g, '');
-  const maxLength = stateLicenseFormats[state] || 9;
-  if (cleanLicense.length !== maxLength) {
-    return `Please enter a valid ${state} driver's license number (${maxLength} characters)`;
-  }
-  return null;
-};
-
-const getStep25Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 1 || trimmed.length > 255) {
-    return 'Employer name must be between 1 and 255 characters';
-  }
-  return null;
-};
-
-const getStep33Error = (first: string, last: string): string | null => {
-  const firstNameTrimmed = first.trim();
-  const lastNameTrimmed = last.trim();
-  if (!firstNameTrimmed || firstNameTrimmed.length < 1 || firstNameTrimmed.length > 255) {
-    return 'First name must be between 1 and 255 characters';
-  }
-  if (!lastNameTrimmed || lastNameTrimmed.length < 1 || lastNameTrimmed.length > 255) {
-    return 'Last name must be between 1 and 255 characters';
-  }
-  return null;
-};
-
-const getStep34Error = (value: string): string | null => {
-  if (!value) {
-    return 'Date of birth is required';
-  }
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(value)) {
-    return 'Date of birth must be in YYYY-MM-DD format';
-  }
-  const birthDate = new Date(value);
-  const today = new Date();
-  const age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
-  if (actualAge < 18 || actualAge > 100) {
-    return 'Age must be between 18 and 100 years';
-  }
-  return null;
-};
-
-// State-specific license formats and lengths (constant, moved outside component)
-const STATE_LICENSE_FORMATS: Record<string, number> = {
-  'AL': 7, 'AK': 7, 'AZ': 9, 'AR': 9, 'CA': 8, 'CO': 9, 'CT': 9, 'DE': 7, 'FL': 13, 'GA': 9,
-  'HI': 9, 'ID': 9, 'IL': 12, 'IN': 10, 'IA': 9, 'KS': 9, 'KY': 9, 'LA': 9, 'ME': 7, 'MD': 13,
-  'MA': 9, 'MI': 13, 'MN': 13, 'MS': 9, 'MO': 9, 'MT': 13, 'NE': 9, 'NV': 10, 'NH': 10, 'NJ': 15,
-  'NM': 9, 'NC': 12, 'ND': 9, 'OH': 8, 'OK': 9, 'OR': 9, 'PA': 8, 'RI': 7, 'SC': 9, 'SD': 9,
-  'TN': 9, 'TX': 7, 'UT': 9, 'VT': 8, 'VA': 9, 'WA': 12, 'WV': 7, 'WI': 14, 'WY': 9,
-};
+import { useFormState } from './hooks/useFormState';
+import { useValidation } from './hooks/useValidation';
+import * as validation from './utils/validation';
+import { STATE_LICENSE_FORMATS, TOTAL_STEPS, spendingOptions, creditScoreOptions, employmentStatusOptions, paymentFrequencyOptions, bankAccountDurationOptions, addressDurationOptions, vehicleStatusOptions, unsecuredDebtAmountOptions, employerDurationOptions, bankruptcyChapterOptions, bankruptcyStatusOptions, driverLicenseStateOptions } from './utils/constants';
+import { formatCurrency } from './utils/formatters';
 
 const FormPage = () => {
-  const TOTAL_STEPS = 38;
-  const [currentStep, setCurrentStep] = useState(1);
-  const [progress, setProgress] = useState(0);
-
   // Calculate progress based on current step
   const calculateProgress = (step: number): number => {
     return Math.round((step / TOTAL_STEPS) * 100);
   };
-  const [trustedFormCertUrl, setTrustedFormCertUrl] = useState<string>('');
-  const [subid1, setSubid1] = useState<string>('');
-  const [subid2, setSubid2] = useState<string>('');
-  const [subid3, setSubid3] = useState<string>('');
-  const [spendingPurpose, setSpendingPurpose] = useState<string>('');
-  const [creditScore, setCreditScore] = useState<string>('');
-  const [employmentStatus, setEmploymentStatus] = useState<string>('');
-  const [paymentFrequency, setPaymentFrequency] = useState<string>('');
-  const [monthlyIncome, setMonthlyIncome] = useState<string>('$ ');
-  const [debtAmount, setDebtAmount] = useState<string>('$ ');
-  const [nextPayDate, setNextPayDate] = useState<string>('');
-  const [secondPayDate, setSecondPayDate] = useState<string>('');
-  const [hasCheckingAccount, setHasCheckingAccount] = useState<string>('');
-  const [hasDirectDeposit, setHasDirectDeposit] = useState<string>('');
-  const [bankAccountDuration, setBankAccountDuration] = useState<string>('');
-  const [bankRoutingNumber, setBankRoutingNumber] = useState<string>('');
-  const [bankName, setBankName] = useState<string>('');
-  const [bankAccountNumber, setBankAccountNumber] = useState<string>('');
-  const [zipCode, setZipCode] = useState<string>('');
-  const [zipCodeError, setZipCodeError] = useState<string>('');
-  const [zipCodeCity, setZipCodeCity] = useState<string>('');
-  const [stepValidationErrors, setStepValidationErrors] = useState<Record<number, string>>({});
-  const [streetAddress, setStreetAddress] = useState<string>('');
-  const [homeOwnership, setHomeOwnership] = useState<string>('');
-  const [addressDuration, setAddressDuration] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [vehicleStatus, setVehicleStatus] = useState<string>('');
-  const [driverLicenseState, setDriverLicenseState] = useState<string>('');
-  const [driverLicenseNumber, setDriverLicenseNumber] = useState<string>('');
-  const [isMilitaryMember, setIsMilitaryMember] = useState<string>('');
-  const [unsecuredDebtAmount, setUnsecuredDebtAmount] = useState<string>('');
-  const [employer, setEmployer] = useState<string>('');
-  const [employerDuration, setEmployerDuration] = useState<string>('');
-  const [occupation, setOccupation] = useState<string>('');
-  const [monthlyHousingPayment, setMonthlyHousingPayment] = useState<string>('$ ');
-  const [hasFiledBankruptcy, setHasFiledBankruptcy] = useState<string>('');
-  const [bankruptcyChapter, setBankruptcyChapter] = useState<string>('');
-  const [bankruptcyStatus, setBankruptcyStatus] = useState<string>('');
-  const [bankruptcyDischargedInLast2Years, setBankruptcyDischargedInLast2Years] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
-  const [birthdate, setBirthdate] = useState<string>('');
-  const [homePhoneNumber, setHomePhoneNumber] = useState<string>('');
-  const [workPhoneNumber, setWorkPhoneNumber] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [ssn, setSsn] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isValidatingZip, setIsValidatingZip] = useState<boolean>(false);
-  const previousStepRef = useRef<number>(1);
-  const isNavigatingBackRef = useRef<boolean>(false);
-  const incomeInputRef = useRef<HTMLInputElement | null>(null);
-  const debtInputRef = useRef<HTMLInputElement | null>(null);
-  const routingNumberInputRef = useRef<HTMLInputElement | null>(null);
-  const driverLicenseInputRef = useRef<HTMLInputElement | null>(null);
-  const housingPaymentInputRef = useRef<HTMLInputElement | null>(null);
-  const homePhoneInputRef = useRef<HTMLInputElement | null>(null);
-  const workPhoneInputRef = useRef<HTMLInputElement | null>(null);
-  const phoneInputRef = useRef<HTMLInputElement | null>(null);
-  const ssnInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Use custom hook for all form state
+  const formState = useFormState();
+  const {
+    currentStep,
+    setCurrentStep,
+    progress,
+    setProgress,
+    trustedFormCertUrl,
+    setTrustedFormCertUrl,
+    subid1,
+    setSubid1,
+    subid2,
+    setSubid2,
+    subid3,
+    setSubid3,
+    spendingPurpose,
+    setSpendingPurpose,
+    creditScore,
+    setCreditScore,
+    employmentStatus,
+    setEmploymentStatus,
+    paymentFrequency,
+    setPaymentFrequency,
+    monthlyIncome,
+    setMonthlyIncome,
+    debtAmount,
+    setDebtAmount,
+    nextPayDate,
+    setNextPayDate,
+    secondPayDate,
+    setSecondPayDate,
+    hasCheckingAccount,
+    setHasCheckingAccount,
+    hasDirectDeposit,
+    setHasDirectDeposit,
+    bankAccountDuration,
+    setBankAccountDuration,
+    bankRoutingNumber,
+    setBankRoutingNumber,
+    bankName,
+    setBankName,
+    bankAccountNumber,
+    setBankAccountNumber,
+    zipCode,
+    setZipCode,
+    zipCodeError,
+    setZipCodeError,
+    zipCodeCity,
+    setZipCodeCity,
+    streetAddress,
+    setStreetAddress,
+    homeOwnership,
+    setHomeOwnership,
+    addressDuration,
+    setAddressDuration,
+    email,
+    setEmail,
+    vehicleStatus,
+    setVehicleStatus,
+    driverLicenseState,
+    setDriverLicenseState,
+    driverLicenseNumber,
+    setDriverLicenseNumber,
+    isMilitaryMember,
+    setIsMilitaryMember,
+    unsecuredDebtAmount,
+    setUnsecuredDebtAmount,
+    employer,
+    setEmployer,
+    employerDuration,
+    setEmployerDuration,
+    occupation,
+    setOccupation,
+    monthlyHousingPayment,
+    setMonthlyHousingPayment,
+    hasFiledBankruptcy,
+    setHasFiledBankruptcy,
+    bankruptcyChapter,
+    setBankruptcyChapter,
+    bankruptcyStatus,
+    setBankruptcyStatus,
+    bankruptcyDischargedInLast2Years,
+    setBankruptcyDischargedInLast2Years,
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    birthdate,
+    setBirthdate,
+    homePhoneNumber,
+    setHomePhoneNumber,
+    workPhoneNumber,
+    setWorkPhoneNumber,
+    phoneNumber,
+    setPhoneNumber,
+    ssn,
+    setSsn,
+    isSubmitting,
+    setIsSubmitting,
+    isValidatingZip,
+    setIsValidatingZip,
+    touchedFields,
+    markFieldTouched,
+    previousStepRef,
+    isNavigatingBackRef,
+    incomeInputRef,
+    debtInputRef,
+    routingNumberInputRef,
+    driverLicenseInputRef,
+    housingPaymentInputRef,
+    homePhoneInputRef,
+    workPhoneInputRef,
+    phoneInputRef,
+    ssnInputRef,
+  } = formState;
+
+  // Use validation hook - errors only show for touched fields
+  const stepValidationErrors = useValidation({
+    monthlyIncome,
+    debtAmount,
+    nextPayDate,
+    secondPayDate,
+    bankRoutingNumber,
+    bankName,
+    bankAccountNumber,
+    zipCode,
+    zipCodeError,
+    streetAddress,
+    email,
+    driverLicenseState,
+    driverLicenseNumber,
+    employer,
+    firstName,
+    lastName,
+    birthdate,
+    touchedFields,
+  });
 
   // Handle TrustedForm certificate data
   const handleTrustedFormReady = (certUrl: string) => {
@@ -284,148 +203,10 @@ const FormPage = () => {
     setSubid1(utmSource);
     setSubid2(utmId);
     setSubid3(utmS1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const spendingOptions = [
-    { value: 'auto-purchase', label: 'Auto Purchase' },
-    { value: 'credit-card-consolidation', label: 'Credit Card Consolidation' },
-    { value: 'debt-consolidation', label: 'Debt Consolidation' },
-    { value: 'debt-settlement', label: 'Debt Settlement' },
-    { value: 'education', label: 'Education' },
-    { value: 'home-improvement', label: 'Home Improvement' },
-    { value: 'medical', label: 'Medical' },
-    { value: 'relocation', label: 'Relocation' },
-    { value: 'renewable-energy', label: 'Renewable Energy' },
-    { value: 'small-business', label: 'Small Business' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'wedding', label: 'Wedding' },
-    { value: 'other', label: 'Other' },
-  ];
-
-  const creditScoreOptions = [
-    { value: 'excellent', label: 'Excellent (720+)' },
-    { value: 'good', label: 'Good (660-719)' },
-    { value: 'fair', label: 'Fair (600-659)' },
-    { value: 'poor', label: 'Poor (Under 599)' },
-    { value: 'no-credit-established', label: 'No Credit Established' },
-  ];
-
-  const employmentStatusOptions = [
-    { value: 'employed', label: 'Employed' },
-    { value: 'self-employed', label: 'Self-Employed' },
-    { value: 'social-security-or-disability', label: 'Social Security or Disability' },
-    { value: 'benefits', label: 'Benefits' },
-    { value: 'unemployed', label: 'Unemployed' },
-  ];
-
-  const paymentFrequencyOptions = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'semi-monthly', label: 'Twice A Month' },
-    { value: 'biweekly', label: 'Every Other Week' },
-    { value: 'weekly', label: 'Weekly' },
-  ];
-
-  const bankAccountDurationOptions = [
-    { value: '2', label: 'Less than 3 Months' },
-    { value: '4', label: '3-6 Months' },
-    { value: '9', label: '6-12 Months' },
-    { value: '24', label: '1-3 Years' },
-    { value: '48', label: '3+ Years' },
-  ];
-
-  const addressDurationOptions = [
-    { value: '60', label: '5 Years or More' },
-    { value: '42', label: '3-4 Years' },
-    { value: '18', label: '1-2 Years' },
-    { value: '7', label: '4-11 Months' },
-    { value: '2', label: 'Less than 3 Months' },
-  ];
-
-  const vehicleStatusOptions = [
-    { value: 'paid-off', label: 'Yes - its paid off' },
-    { value: 'making-payments', label: 'Yes - I\'m making payments' },
-    { value: 'no', label: 'No' },
-  ];
-
-  const unsecuredDebtAmountOptions = [
-    { value: '9999-or-less', label: '$9,999 or less' },
-    { value: '10000-19999', label: '$10,000 - $19,999' },
-    { value: '20000-29999', label: '$20,000 - $29,999' },
-    { value: '30000-or-more', label: '$30,000 or more' },
-  ];
-
-  const employerDurationOptions = [
-    { value: '60', label: '5 years or more' },
-    { value: '42', label: '3-4 years' },
-    { value: '18', label: '1-2 years' },
-    { value: '7', label: '4 - 11 months' },
-    { value: '2', label: 'Less than 3 months' },
-  ];
-
-  const bankruptcyChapterOptions = [
-    { value: 'chapter-7', label: 'Chapter 7' },
-    { value: 'chapter-13', label: 'Chapter 13' },
-  ];
-
-  const bankruptcyStatusOptions = [
-    { value: 'completed', label: 'Discharged (Completed)' },
-    { value: 'in-progress', label: 'Open (In Progress)' },
-    { value: 'incomplete', label: 'Dismissed (Incomplete)' },
-  ];
-
-  const driverLicenseStateOptions = [
-    { value: 'AL', label: 'Alabama' },
-    { value: 'AK', label: 'Alaska' },
-    { value: 'AZ', label: 'Arizona' },
-    { value: 'AR', label: 'Arkansas' },
-    { value: 'CA', label: 'California' },
-    { value: 'CO', label: 'Colorado' },
-    { value: 'CT', label: 'Connecticut' },
-    { value: 'DE', label: 'Delaware' },
-    { value: 'FL', label: 'Florida' },
-    { value: 'GA', label: 'Georgia' },
-    { value: 'HI', label: 'Hawaii' },
-    { value: 'ID', label: 'Idaho' },
-    { value: 'IL', label: 'Illinois' },
-    { value: 'IN', label: 'Indiana' },
-    { value: 'IA', label: 'Iowa' },
-    { value: 'KS', label: 'Kansas' },
-    { value: 'KY', label: 'Kentucky' },
-    { value: 'LA', label: 'Louisiana' },
-    { value: 'ME', label: 'Maine' },
-    { value: 'MD', label: 'Maryland' },
-    { value: 'MA', label: 'Massachusetts' },
-    { value: 'MI', label: 'Michigan' },
-    { value: 'MN', label: 'Minnesota' },
-    { value: 'MS', label: 'Mississippi' },
-    { value: 'MO', label: 'Missouri' },
-    { value: 'MT', label: 'Montana' },
-    { value: 'NE', label: 'Nebraska' },
-    { value: 'NV', label: 'Nevada' },
-    { value: 'NH', label: 'New Hampshire' },
-    { value: 'NJ', label: 'New Jersey' },
-    { value: 'NM', label: 'New Mexico' },
-    { value: 'NC', label: 'North Carolina' },
-    { value: 'ND', label: 'North Dakota' },
-    { value: 'OH', label: 'Ohio' },
-    { value: 'OK', label: 'Oklahoma' },
-    { value: 'OR', label: 'Oregon' },
-    { value: 'PA', label: 'Pennsylvania' },
-    { value: 'RI', label: 'Rhode Island' },
-    { value: 'SC', label: 'South Carolina' },
-    { value: 'SD', label: 'South Dakota' },
-    { value: 'TN', label: 'Tennessee' },
-    { value: 'TX', label: 'Texas' },
-    { value: 'UT', label: 'Utah' },
-    { value: 'VT', label: 'Vermont' },
-    { value: 'VA', label: 'Virginia' },
-    { value: 'WA', label: 'Washington' },
-    { value: 'WV', label: 'West Virginia' },
-    { value: 'WI', label: 'Wisconsin' },
-    { value: 'WY', label: 'Wyoming' },
-  ];
-
-  // Use the constant state license formats (defined outside component)
+  // Use the constant state license formats
   const stateLicenseFormats = STATE_LICENSE_FORMATS;
 
   const handleSpendingPurposeChange = (value: string) => {
@@ -477,15 +258,6 @@ const FormPage = () => {
     }
   };
 
-  const formatCurrency = (value: string): string => {
-    // Remove all non-digit characters
-    const numericValue = value.replace(/[^\d]/g, '');
-    
-    if (!numericValue) return '';
-    
-    // Add commas for thousands
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
 
   const handleMonthlyIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
@@ -812,11 +584,13 @@ const FormPage = () => {
       }, 100);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creditScore, employmentStatus, paymentFrequency, hasCheckingAccount, hasDirectDeposit, homeOwnership, addressDuration, vehicleStatus, isMilitaryMember, unsecuredDebtAmount, employerDuration, hasFiledBankruptcy, bankruptcyChapter, bankruptcyStatus, bankruptcyDischargedInLast2Years, currentStep]);
 
   // Track step changes
   useEffect(() => {
     previousStepRef.current = currentStep;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
 
   const handleContinue = () => {
@@ -1026,82 +800,30 @@ const FormPage = () => {
     }
   };
 
-  // Update validation errors in useEffect to avoid infinite re-renders
-  useEffect(() => {
-    const errors: Record<number, string> = {};
-    
-    const error5 = getStep5Error(monthlyIncome);
-    if (error5) errors[5] = error5;
-    
-    const error6 = getStep6Error(debtAmount);
-    if (error6) errors[6] = error6;
-    
-    const error7 = getStep7Error(nextPayDate);
-    if (error7) errors[7] = error7;
-    
-    const error8 = getStep8Error(secondPayDate);
-    if (error8) errors[8] = error8;
-    
-    const error12 = getStep12Error(bankRoutingNumber);
-    if (error12) errors[12] = error12;
-    
-    const error13 = getStep13Error(bankName);
-    if (error13) errors[13] = error13;
-    
-    const error14 = getStep14Error(bankAccountNumber);
-    if (error14) errors[14] = error14;
-    
-    const error15 = getStep15Error(zipCode, zipCodeError);
-    if (error15) errors[15] = error15;
-    
-    const error16 = getStep16Error(streetAddress);
-    if (error16) errors[16] = error16;
-    
-    const error19 = getStep19Error(email);
-    if (error19) errors[19] = error19;
-    
-    const error21 = getStep21Error(driverLicenseState);
-    if (error21) errors[21] = error21;
-    
-    const error22 = getStep22Error(driverLicenseState, driverLicenseNumber, STATE_LICENSE_FORMATS);
-    if (error22) errors[22] = error22;
-    
-    const error25 = getStep25Error(employer);
-    if (error25) errors[25] = error25;
-    
-    const error33 = getStep33Error(firstName, lastName);
-    if (error33) errors[33] = error33;
-    
-    const error34 = getStep34Error(birthdate);
-    if (error34) errors[34] = error34;
-    
-    setStepValidationErrors(errors);
-  }, [monthlyIncome, debtAmount, nextPayDate, secondPayDate, bankRoutingNumber, bankName, bankAccountNumber, zipCode, zipCodeError, streetAddress, email, driverLicenseState, driverLicenseNumber, employer, firstName, lastName, birthdate]);
-
   // Step completion checks (pure boolean calculations)
-  const isStep5Complete = monthlyIncome && monthlyIncome.length > 2 && getStep5Error(monthlyIncome) === null;
-  const isStep6Complete = debtAmount && debtAmount.length > 2 && getStep6Error(debtAmount) === null;
-  const isStep7Complete = nextPayDate !== '' && getStep7Error(nextPayDate) === null;
-  const isStep8Complete = secondPayDate !== '' && getStep8Error(secondPayDate) === null;
+  const isStep5Complete = monthlyIncome && monthlyIncome.length > 2 && validation.getStep5Error(monthlyIncome) === null;
+  const isStep6Complete = debtAmount && debtAmount.length > 2 && validation.getStep6Error(debtAmount) === null;
+  const isStep7Complete = nextPayDate !== '' && validation.getStep7Error(nextPayDate) === null;
+  const isStep8Complete = secondPayDate !== '' && validation.getStep8Error(secondPayDate) === null;
   const isStep10Complete = hasDirectDeposit === 'no';
   const isStep11Complete = bankAccountDuration !== '';
-  const isStep12Complete = bankRoutingNumber.replace(/[^\d]/g, '').length === 9 && getStep12Error(bankRoutingNumber) === null;
-  const isStep13Complete = bankName.trim() !== '' && getStep13Error(bankName) === null;
-  const isStep14Complete = bankAccountNumber.trim() !== '' && getStep14Error(bankAccountNumber) === null;
-  const isStep16Complete = streetAddress.trim() !== '' && getStep16Error(streetAddress) === null;
-  const isStep19Complete = email.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && getStep19Error(email) === null;
-  const isStep21Complete = driverLicenseState !== '' && getStep21Error(driverLicenseState) === null;
+  const isStep12Complete = bankRoutingNumber.replace(/[^\d]/g, '').length === 9 && validation.getStep12Error(bankRoutingNumber) === null;
+  const isStep13Complete = bankName.trim() !== '' && validation.getStep13Error(bankName) === null;
+  const isStep14Complete = bankAccountNumber.trim() !== '' && validation.getStep14Error(bankAccountNumber) === null;
+  const isStep16Complete = streetAddress.trim() !== '' && validation.getStep16Error(streetAddress) === null;
+  const isStep19Complete = email.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && validation.getStep19Error(email) === null;
+  const isStep21Complete = driverLicenseState !== '' && validation.getStep21Error(driverLicenseState) === null;
   const isStep22Complete = (() => {
     if (!driverLicenseState || !driverLicenseNumber) return false;
     const cleanLicense = driverLicenseNumber.replace(/[^A-Za-z0-9]/g, '');
     const maxLength = stateLicenseFormats[driverLicenseState] || 9;
-    return cleanLicense.length === maxLength && getStep22Error(driverLicenseState, driverLicenseNumber, STATE_LICENSE_FORMATS) === null;
+    return cleanLicense.length === maxLength && validation.getStep22Error(driverLicenseState, driverLicenseNumber, STATE_LICENSE_FORMATS) === null;
   })();
-  const isStep25Complete = employer.trim() !== '' && getStep25Error(employer) === null;
+  const isStep25Complete = employer.trim() !== '' && validation.getStep25Error(employer) === null;
   const isStep27Complete = occupation.trim() !== '';
   const isStep28Complete = monthlyHousingPayment && monthlyHousingPayment.length > 2;
-  const isStep33Complete = firstName.trim() !== '' && lastName.trim() !== '' && getStep33Error(firstName, lastName) === null;
-  const isStep34Complete = birthdate !== '' && getStep34Error(birthdate) === null;
+  const isStep33Complete = firstName.trim() !== '' && lastName.trim() !== '' && validation.getStep33Error(firstName, lastName) === null;
+  const isStep34Complete = birthdate !== '' && validation.getStep34Error(birthdate) === null;
   const isStep35Complete = homePhoneNumber.replace(/[^\d]/g, '').length === 10;
   const isStep36Complete = workPhoneNumber.replace(/[^\d]/g, '').length === 10;
   const isStep37Complete = phoneNumber.replace(/[^\d]/g, '').length === 10;
@@ -2695,6 +2417,7 @@ const FormPage = () => {
                     value={debtAmount}
                     onChange={handleDebtAmountChange}
                     onKeyDown={handleDebtAmountKeyDown}
+                    onBlur={() => markFieldTouched(6)}
                     onFocus={(e) => {
                       // Position cursor after '$ ' when focused
                       if (e.target.value === '$ ' || e.target.value === '$') {
@@ -2708,7 +2431,7 @@ const FormPage = () => {
                       border-2 rounded-lg
                       transition-all duration-200
                       focus:outline-none
-                      ${debtAmount && debtAmount.length > 2 && getStep6Error(debtAmount) === null
+                      ${debtAmount && debtAmount.length > 2 && validation.getStep6Error(debtAmount) === null
                         ? 'border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
                         : stepValidationErrors[6]
                         ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -2782,7 +2505,10 @@ const FormPage = () => {
               <div className="mb-6">
                 <DatePicker
                   value={nextPayDate}
-                  onChange={handleNextPayDateChange}
+                  onChange={(value) => {
+                    handleNextPayDateChange(value);
+                    markFieldTouched(7);
+                  }}
                   placeholder="Select your next pay date..."
                   className="w-full"
                   minDate={new Date()}
@@ -2852,7 +2578,10 @@ const FormPage = () => {
               <div className="mb-6">
                 <DatePicker
                   value={secondPayDate}
-                  onChange={handleSecondPayDateChange}
+                  onChange={(value) => {
+                    handleSecondPayDateChange(value);
+                    markFieldTouched(8);
+                  }}
                   placeholder="Select your second pay date..."
                   className="w-full"
                   minDate={getSecondPayDateRange().minDate || new Date()}
@@ -3172,8 +2901,12 @@ const FormPage = () => {
                     ref={routingNumberInputRef}
                     type="text"
                     value={bankRoutingNumber}
-                    onChange={handleRoutingNumberChange}
+                    onChange={(e) => {
+                      handleRoutingNumberChange(e);
+                      markFieldTouched(12);
+                    }}
                     onKeyDown={handleRoutingNumberKeyDown}
+                    onBlur={() => markFieldTouched(12)}
                     placeholder="123-456-789"
                     maxLength={11}
                     className={`
@@ -3254,7 +2987,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
+                    onChange={(e) => {
+                      setBankName(e.target.value);
+                      markFieldTouched(13);
+                    }}
+                    onBlur={() => markFieldTouched(13)}
                     placeholder="Enter your bank name"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -3334,7 +3071,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={bankAccountNumber}
-                    onChange={(e) => setBankAccountNumber(e.target.value)}
+                    onChange={(e) => {
+                      setBankAccountNumber(e.target.value);
+                      markFieldTouched(14);
+                    }}
+                    onBlur={() => markFieldTouched(14)}
                     placeholder="Enter your bank account number"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -3414,7 +3155,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={zipCode}
-                    onChange={handleZipCodeChange}
+                    onChange={(e) => {
+                      handleZipCodeChange(e);
+                      markFieldTouched(15);
+                    }}
+                    onBlur={() => markFieldTouched(15)}
                     placeholder="12345"
                     maxLength={5}
                     className={`
@@ -3514,7 +3259,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={streetAddress}
-                    onChange={(e) => setStreetAddress(e.target.value)}
+                    onChange={(e) => {
+                      setStreetAddress(e.target.value);
+                      markFieldTouched(16);
+                    }}
+                    onBlur={() => markFieldTouched(16)}
                     placeholder="Enter your street address"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -3736,7 +3485,11 @@ const FormPage = () => {
                   <input
                     type="email"
                     value={email}
-                    onChange={handleEmailChange}
+                    onChange={(e) => {
+                      handleEmailChange(e);
+                      markFieldTouched(19);
+                    }}
+                    onBlur={() => markFieldTouched(19)}
                     placeholder="Enter your email address"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -3879,7 +3632,10 @@ const FormPage = () => {
                 <Dropdown
                   options={driverLicenseStateOptions}
                   value={driverLicenseState}
-                  onChange={handleDriverLicenseStateChange}
+                  onChange={(value) => {
+                    handleDriverLicenseStateChange(value);
+                    markFieldTouched(21);
+                  }}
                   placeholder="Select a state..."
                   className="w-full"
                   searchable={true}
@@ -3961,8 +3717,12 @@ const FormPage = () => {
                     ref={driverLicenseInputRef}
                     type="text"
                     value={driverLicenseNumber}
-                    onChange={handleDriverLicenseNumberChange}
+                    onChange={(e) => {
+                      handleDriverLicenseNumberChange(e);
+                      markFieldTouched(22);
+                    }}
                     onKeyPress={handleDriverLicenseNumberKeyPress}
+                    onBlur={() => markFieldTouched(22)}
                     placeholder={driverLicenseState 
                       ? `Enter your ${driverLicenseStateOptions.find(opt => opt.value === driverLicenseState)?.label} license number`
                       : 'Select state first'}
@@ -4184,7 +3944,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={employer}
-                    onChange={handleEmployerChange}
+                    onChange={(e) => {
+                      handleEmployerChange(e);
+                      markFieldTouched(25);
+                    }}
+                    onBlur={() => markFieldTouched(25)}
                     placeholder="Enter your employer's name"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -4759,7 +4523,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={firstName}
-                    onChange={handleFirstNameChange}
+                    onChange={(e) => {
+                      handleFirstNameChange(e);
+                      markFieldTouched(33);
+                    }}
+                    onBlur={() => markFieldTouched(33)}
                     placeholder="First Name"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -4779,7 +4547,11 @@ const FormPage = () => {
                   <input
                     type="text"
                     value={lastName}
-                    onChange={handleLastNameChange}
+                    onChange={(e) => {
+                      handleLastNameChange(e);
+                      markFieldTouched(33);
+                    }}
+                    onBlur={() => markFieldTouched(33)}
                     placeholder="Last Name"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -4857,7 +4629,10 @@ const FormPage = () => {
               <div className="mb-6">
                 <DatePicker
                   value={birthdate}
-                  onChange={handleBirthdateChange}
+                  onChange={(value) => {
+                    handleBirthdateChange(value);
+                    markFieldTouched(34);
+                  }}
                   placeholder="Select your birthdate"
                   maxDate={new Date()} // Cannot select future dates
                   minDate={new Date(new Date().getFullYear() - 120, 0, 1)} // Allow up to 120 years ago
