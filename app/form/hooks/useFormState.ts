@@ -56,6 +56,7 @@ export const useFormState = () => {
   
   const previousStepRef = useRef<number>(1);
   const isNavigatingBackRef = useRef<boolean>(false);
+  const lastUserInteractionStepRef = useRef<number | null>(null);
   const incomeInputRef = useRef<HTMLInputElement | null>(null);
   const debtInputRef = useRef<HTMLInputElement | null>(null);
   const routingNumberInputRef = useRef<HTMLInputElement | null>(null);
@@ -173,6 +174,7 @@ export const useFormState = () => {
     markFieldTouched,
     previousStepRef,
     isNavigatingBackRef,
+    lastUserInteractionStepRef,
     incomeInputRef,
     debtInputRef,
     routingNumberInputRef,

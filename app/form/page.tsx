@@ -124,6 +124,7 @@ const FormPage = () => {
     markFieldTouched,
     previousStepRef,
     isNavigatingBackRef,
+    lastUserInteractionStepRef,
     incomeInputRef,
     debtInputRef,
     routingNumberInputRef,
@@ -216,6 +217,8 @@ const FormPage = () => {
   const handleCreditScoreChange = (value: string) => {
     const isAlreadySelected = creditScore === value;
     setCreditScore(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 2;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -224,13 +227,16 @@ const FormPage = () => {
         setCurrentStep(3);
         setProgress(calculateProgress(3));
         previousStepRef.current = 3;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleEmploymentStatusChange = (value: string) => {
     const isAlreadySelected = employmentStatus === value;
     setEmploymentStatus(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 3;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -239,13 +245,16 @@ const FormPage = () => {
         setCurrentStep(4);
         setProgress(calculateProgress(4));
         previousStepRef.current = 4;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handlePaymentFrequencyChange = (value: string) => {
     const isAlreadySelected = paymentFrequency === value;
     setPaymentFrequency(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 4;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -254,7 +263,8 @@ const FormPage = () => {
         setCurrentStep(5);
         setProgress(calculateProgress(5));
         previousStepRef.current = 5;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
@@ -433,108 +443,119 @@ const FormPage = () => {
     }
   };
 
-  // Auto-proceed to next step when credit score is selected (only if not navigating back)
+  // Auto-proceed to next step when credit score is selected (only if not navigating back and user is on the correct step)
   useEffect(() => {
-    if (creditScore && currentStep === 2 && !isNavigatingBackRef.current) {
+    if (creditScore && currentStep === 2 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 2) {
       const timer = setTimeout(() => {
         setCurrentStep(3);
         setProgress(calculateProgress(3));
         previousStepRef.current = 3;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when employment status is selected (only if not navigating back)
-    if (employmentStatus && currentStep === 3 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when employment status is selected (only if not navigating back and user is on the correct step)
+    if (employmentStatus && currentStep === 3 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 3) {
       const timer = setTimeout(() => {
         setCurrentStep(4);
         setProgress(calculateProgress(4));
         previousStepRef.current = 4;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when payment frequency is selected (only if not navigating back)
-    if (paymentFrequency && currentStep === 4 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when payment frequency is selected (only if not navigating back and user is on the correct step)
+    if (paymentFrequency && currentStep === 4 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 4) {
       const timer = setTimeout(() => {
         setCurrentStep(5);
         setProgress(calculateProgress(5));
         previousStepRef.current = 5;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when checking account is selected (only if not navigating back)
-    if (hasCheckingAccount && currentStep === 9 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when checking account is selected (only if not navigating back and user is on the correct step)
+    if (hasCheckingAccount && currentStep === 9 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 9) {
       const timer = setTimeout(() => {
         setCurrentStep(10);
         setProgress(calculateProgress(10));
         previousStepRef.current = 10;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when direct deposit is "Yes" (only if not navigating back)
-    if (hasDirectDeposit === 'yes' && currentStep === 10 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when direct deposit is "Yes" (only if not navigating back and user is on the correct step)
+    if (hasDirectDeposit === 'yes' && currentStep === 10 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 10) {
       const timer = setTimeout(() => {
         setCurrentStep(11);
         setProgress(calculateProgress(11));
         previousStepRef.current = 11;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when home ownership is selected (only if not navigating back)
-    if (homeOwnership && currentStep === 17 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when home ownership is selected (only if not navigating back and user is on the correct step)
+    if (homeOwnership && currentStep === 17 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 17) {
       const timer = setTimeout(() => {
         setCurrentStep(18);
         setProgress(calculateProgress(18));
         previousStepRef.current = 18;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when address duration is selected (only if not navigating back)
-    if (addressDuration && currentStep === 18 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when address duration is selected (only if not navigating back and user is on the correct step)
+    if (addressDuration && currentStep === 18 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 18) {
       const timer = setTimeout(() => {
         setCurrentStep(19);
         setProgress(calculateProgress(19));
         previousStepRef.current = 19;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when vehicle status is selected (only if not navigating back)
-    if (vehicleStatus && currentStep === 20 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when vehicle status is selected (only if not navigating back and user is on the correct step)
+    if (vehicleStatus && currentStep === 20 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 20) {
       const timer = setTimeout(() => {
         setCurrentStep(21);
         setProgress(calculateProgress(21));
         previousStepRef.current = 21;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when military member status is selected (only if not navigating back)
-    if (isMilitaryMember && currentStep === 23 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when military member status is selected (only if not navigating back and user is on the correct step)
+    if (isMilitaryMember && currentStep === 23 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 23) {
       const timer = setTimeout(() => {
         setCurrentStep(24);
         setProgress(calculateProgress(24));
         previousStepRef.current = 24;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when unsecured debt amount is selected (only if not navigating back)
-    if (unsecuredDebtAmount && currentStep === 24 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when unsecured debt amount is selected (only if not navigating back and user is on the correct step)
+    if (unsecuredDebtAmount && currentStep === 24 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 24) {
       const timer = setTimeout(() => {
         setCurrentStep(25);
         setProgress(calculateProgress(25));
         previousStepRef.current = 25;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when employer duration is selected (only if not navigating back)
-    if (employerDuration && currentStep === 26 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when employer duration is selected (only if not navigating back and user is on the correct step)
+    if (employerDuration && currentStep === 26 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 26) {
       const timer = setTimeout(() => {
         setCurrentStep(27);
         setProgress(calculateProgress(27));
         previousStepRef.current = 27;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when bankruptcy status is selected (only if not navigating back)
-    if (hasFiledBankruptcy && currentStep === 29 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when bankruptcy status is selected (only if not navigating back and user is on the correct step)
+    if (hasFiledBankruptcy && currentStep === 29 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 29) {
       const timer = setTimeout(() => {
         if (hasFiledBankruptcy === 'yes') {
           // If "Yes", proceed to step 30 (bankruptcy questions)
@@ -547,41 +568,45 @@ const FormPage = () => {
           setProgress(calculateProgress(33));
           previousStepRef.current = 33;
         }
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when bankruptcy chapter is selected (only if not navigating back)
-    if (bankruptcyChapter && currentStep === 30 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when bankruptcy chapter is selected (only if not navigating back and user is on the correct step)
+    if (bankruptcyChapter && currentStep === 30 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 30) {
       const timer = setTimeout(() => {
         setCurrentStep(31);
         setProgress(calculateProgress(31));
         previousStepRef.current = 31;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when bankruptcy status is selected (only if not navigating back)
-    if (bankruptcyStatus && currentStep === 31 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when bankruptcy status is selected (only if not navigating back and user is on the correct step)
+    if (bankruptcyStatus && currentStep === 31 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 31) {
       const timer = setTimeout(() => {
         setCurrentStep(32);
         setProgress(calculateProgress(32));
         previousStepRef.current = 32;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
-    // Auto-proceed to next step when bankruptcy discharged status is selected (only if not navigating back)
-    if (bankruptcyDischargedInLast2Years && currentStep === 32 && !isNavigatingBackRef.current) {
+    // Auto-proceed to next step when bankruptcy discharged status is selected (only if not navigating back and user is on the correct step)
+    if (bankruptcyDischargedInLast2Years && currentStep === 32 && !isNavigatingBackRef.current && lastUserInteractionStepRef.current === 32) {
       const timer = setTimeout(() => {
         setCurrentStep(33);
         setProgress(calculateProgress(33));
         previousStepRef.current = 33;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after auto-proceeding
+      }, 200);
       return () => clearTimeout(timer);
     }
     // Reset the flag after a short delay
     if (isNavigatingBackRef.current) {
       const timer = setTimeout(() => {
         isNavigatingBackRef.current = false;
-      }, 100);
+      }, 200);
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -604,6 +629,8 @@ const FormPage = () => {
   };
 
   const handlePrevious = () => {
+    // Clear user interaction ref when navigating back to prevent unwanted auto-progression
+    lastUserInteractionStepRef.current = null;
     if (currentStep === 2) {
       isNavigatingBackRef.current = true;
       setCurrentStep(1);
@@ -1000,6 +1027,8 @@ const FormPage = () => {
   const handleCheckingAccountChange = (value: string) => {
     const isAlreadySelected = hasCheckingAccount === value;
     setHasCheckingAccount(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 9;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1008,13 +1037,16 @@ const FormPage = () => {
         setCurrentStep(10);
         setProgress(calculateProgress(10));
         previousStepRef.current = 10;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleDirectDepositChange = (value: string) => {
     const isAlreadySelected = hasDirectDeposit === value;
     setHasDirectDeposit(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 10;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1023,7 +1055,8 @@ const FormPage = () => {
         setCurrentStep(11);
         setProgress(calculateProgress(11));
         previousStepRef.current = 11;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
@@ -1034,6 +1067,8 @@ const FormPage = () => {
   const handleHomeOwnershipChange = (value: string) => {
     const isAlreadySelected = homeOwnership === value;
     setHomeOwnership(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 17;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1042,12 +1077,15 @@ const FormPage = () => {
         setCurrentStep(18);
         setProgress(calculateProgress(18));
         previousStepRef.current = 18;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleAddressDurationChange = (value: string) => {
     setAddressDuration(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 18;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
   };
@@ -1059,6 +1097,8 @@ const FormPage = () => {
   const handleVehicleStatusChange = (value: string) => {
     const isAlreadySelected = vehicleStatus === value;
     setVehicleStatus(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 20;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1067,7 +1107,8 @@ const FormPage = () => {
         setCurrentStep(21);
         setProgress(calculateProgress(21));
         previousStepRef.current = 21;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
@@ -1080,6 +1121,8 @@ const FormPage = () => {
   const handleMilitaryMemberChange = (value: string) => {
     const isAlreadySelected = isMilitaryMember === value;
     setIsMilitaryMember(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 23;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1088,13 +1131,16 @@ const FormPage = () => {
         setCurrentStep(24);
         setProgress(calculateProgress(24));
         previousStepRef.current = 24;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleUnsecuredDebtAmountChange = (value: string) => {
     const isAlreadySelected = unsecuredDebtAmount === value;
     setUnsecuredDebtAmount(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 24;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1103,7 +1149,8 @@ const FormPage = () => {
         setCurrentStep(25);
         setProgress(calculateProgress(25));
         previousStepRef.current = 25;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
@@ -1113,6 +1160,8 @@ const FormPage = () => {
 
   const handleEmployerDurationChange = (value: string) => {
     setEmployerDuration(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 26;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
   };
@@ -1211,6 +1260,8 @@ const FormPage = () => {
   const handleBankruptcyChange = (value: string) => {
     const isAlreadySelected = hasFiledBankruptcy === value;
     setHasFiledBankruptcy(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 29;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1225,13 +1276,16 @@ const FormPage = () => {
           setProgress(calculateProgress(33));
           previousStepRef.current = 33;
         }
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleBankruptcyChapterChange = (value: string) => {
     const isAlreadySelected = bankruptcyChapter === value;
     setBankruptcyChapter(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 30;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1240,13 +1294,16 @@ const FormPage = () => {
         setCurrentStep(31);
         setProgress(calculateProgress(31));
         previousStepRef.current = 31;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleBankruptcyStatusChange = (value: string) => {
     const isAlreadySelected = bankruptcyStatus === value;
     setBankruptcyStatus(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 31;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1255,13 +1312,16 @@ const FormPage = () => {
         setCurrentStep(32);
         setProgress(calculateProgress(32));
         previousStepRef.current = 32;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
   const handleBankruptcyDischargedChange = (value: string) => {
     const isAlreadySelected = bankruptcyDischargedInLast2Years === value;
     setBankruptcyDischargedInLast2Years(value);
+    // Track user interaction on this step
+    lastUserInteractionStepRef.current = 32;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
@@ -1270,7 +1330,8 @@ const FormPage = () => {
         setCurrentStep(33);
         setProgress(calculateProgress(33));
         previousStepRef.current = 33;
-      }, 300);
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 200);
     }
   };
 
