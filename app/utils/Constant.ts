@@ -152,7 +152,7 @@ export const FOOTER_SECTION = {
   links: [
     { text: "Privacy Policy", href: "/privacy-policy" },
     { text: "Terms and Conditions", href: "/terms" },
-    { text: "Unsubscribe", href: "#" },
+    // { text: "Unsubscribe", href: "#" },
   ],
   copyright: {
     text: `© ${new Date().getFullYear()} USA Loans Today. All rights reserved.`,

@@ -350,6 +350,12 @@ const FormPage = () => {
     const input = e.currentTarget;
     const cursorPosition = input.selectionStart || 0;
     
+    // Handle Enter key to proceed
+    if (e.key === 'Enter') {
+      handleEnterKeyDown(e);
+      return;
+    }
+    
     // Prevent backspace/delete from removing the $ and space
     if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 2) {
       e.preventDefault();
@@ -436,6 +442,12 @@ const FormPage = () => {
   const handleDebtAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const cursorPosition = input.selectionStart || 0;
+    
+    // Handle Enter key to proceed
+    if (e.key === 'Enter') {
+      handleEnterKeyDown(e);
+      return;
+    }
     
     // Prevent backspace/delete from removing the $ and space
     if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 2) {
@@ -856,6 +868,147 @@ const FormPage = () => {
   const isStep37Complete = phoneNumber.replace(/[^\d]/g, '').length === 10;
   const isStep38Complete = ssn.replace(/[^\d]/g, '').length === 9;
 
+  // Handle Enter key to proceed to next step
+  const handleEnterKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Mark the current field as touched
+      markFieldTouched(currentStep);
+      
+      // Check if current step is complete and proceed
+      switch (currentStep) {
+        case 1:
+          if (isStep1Complete) {
+            handleContinue();
+          }
+          break;
+        case 5:
+          if (isStep5Complete) {
+            setCurrentStep(6);
+            setProgress(calculateProgress(6));
+          }
+          break;
+        case 6:
+          if (isStep6Complete) {
+            setCurrentStep(7);
+            setProgress(calculateProgress(7));
+          }
+          break;
+        case 7:
+          if (isStep7Complete) {
+            setCurrentStep(8);
+            setProgress(calculateProgress(8));
+          }
+          break;
+        case 8:
+          if (isStep8Complete) {
+            setCurrentStep(9);
+            setProgress(calculateProgress(9));
+          }
+          break;
+        case 12:
+          if (isStep12Complete) {
+            setCurrentStep(13);
+            setProgress(calculateProgress(13));
+          }
+          break;
+        case 13:
+          if (isStep13Complete) {
+            setCurrentStep(14);
+            setProgress(calculateProgress(14));
+          }
+          break;
+        case 14:
+          if (isStep14Complete) {
+            setCurrentStep(15);
+            setProgress(calculateProgress(15));
+          }
+          break;
+        case 15:
+          if (zipCode.length === 5 && !zipCodeError) {
+            handleZipCodeContinue();
+          }
+          break;
+        case 16:
+          if (isStep16Complete) {
+            setCurrentStep(17);
+            setProgress(calculateProgress(17));
+          }
+          break;
+        case 19:
+          if (isStep19Complete) {
+            setCurrentStep(20);
+            setProgress(calculateProgress(20));
+          }
+          break;
+        case 22:
+          if (isStep22Complete) {
+            setCurrentStep(23);
+            setProgress(calculateProgress(23));
+          }
+          break;
+        case 25:
+          if (isStep25Complete) {
+            setCurrentStep(26);
+            setProgress(calculateProgress(26));
+          }
+          break;
+        case 27:
+          if (isStep27Complete) {
+            setCurrentStep(28);
+            setProgress(calculateProgress(28));
+          }
+          break;
+        case 28:
+          if (isStep28Complete) {
+            setCurrentStep(29);
+            setProgress(calculateProgress(29));
+          }
+          break;
+        case 33:
+          if (isStep33Complete) {
+            setCurrentStep(34);
+            setProgress(calculateProgress(34));
+          }
+          break;
+        case 34:
+          if (isStep34Complete) {
+            setCurrentStep(35);
+            setProgress(calculateProgress(35));
+          }
+          break;
+        case 35:
+          if (isStep35Complete) {
+            setCurrentStep(36);
+            setProgress(calculateProgress(36));
+          }
+          break;
+        case 36:
+          if (isStep36Complete) {
+            setCurrentStep(37);
+            setProgress(calculateProgress(37));
+          }
+          break;
+        case 37:
+          if (isStep37Complete) {
+            setCurrentStep(38);
+            setProgress(calculateProgress(38));
+          }
+          break;
+        case 38:
+          if (isStep38Complete) {
+            // This is the last step, so handle form submission if needed
+            // For now, just prevent default behavior
+          }
+          break;
+        default:
+          // For steps without input fields or special handling, do nothing
+          break;
+      }
+    }
+  };
+
   const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow digits and limit to 5 digits
@@ -1251,6 +1404,12 @@ const FormPage = () => {
     const input = e.currentTarget;
     const cursorPosition = input.selectionStart || 0;
     
+    // Handle Enter key to proceed
+    if (e.key === 'Enter') {
+      handleEnterKeyDown(e);
+      return;
+    }
+    
     // Prevent backspace/delete from removing the $ and space
     if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 2) {
       e.preventDefault();
@@ -1421,6 +1580,12 @@ const FormPage = () => {
       const cursorPosition = input.selectionStart || 0;
       const value = input.value;
       
+      // Handle Enter key to proceed
+      if (e.key === 'Enter') {
+        handleEnterKeyDown(e);
+        return;
+      }
+      
       // Handle backspace to remove separators
       if (e.key === 'Backspace' && cursorPosition > 0) {
         // If cursor is right after a separator, delete the separator and the digit before it
@@ -1536,6 +1701,12 @@ const FormPage = () => {
     const input = e.currentTarget;
     const cursorPosition = input.selectionStart || 0;
     const value = input.value;
+    
+    // Handle Enter key to proceed
+    if (e.key === 'Enter') {
+      handleEnterKeyDown(e);
+      return;
+    }
     
     // Handle backspace to remove separators
     if (e.key === 'Backspace' && cursorPosition > 0) {
@@ -2109,6 +2280,12 @@ const FormPage = () => {
     const input = e.currentTarget;
     const cursorPosition = input.selectionStart || 0;
     const value = input.value;
+    
+    // Handle Enter key to proceed
+    if (e.key === 'Enter') {
+      handleEnterKeyDown(e);
+      return;
+    }
     
     // Handle backspace to remove dashes
     if (e.key === 'Backspace' && cursorPosition > 0) {
@@ -3052,6 +3229,7 @@ const FormPage = () => {
                       setBankName(e.target.value);
                       markFieldTouched(13);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(13)}
                     placeholder="Enter your bank name"
                     className={`
@@ -3136,6 +3314,7 @@ const FormPage = () => {
                       setBankAccountNumber(e.target.value);
                       markFieldTouched(14);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(14)}
                     placeholder="Enter your bank account number"
                     className={`
@@ -3220,6 +3399,7 @@ const FormPage = () => {
                       handleZipCodeChange(e);
                       markFieldTouched(15);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(15)}
                     placeholder="12345"
                     maxLength={5}
@@ -3324,6 +3504,7 @@ const FormPage = () => {
                       setStreetAddress(e.target.value);
                       markFieldTouched(16);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(16)}
                     placeholder="Enter your street address"
                     className={`
@@ -3550,6 +3731,7 @@ const FormPage = () => {
                       handleEmailChange(e);
                       markFieldTouched(19);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(19)}
                     placeholder="Enter your email address"
                     className={`
@@ -3782,6 +3964,7 @@ const FormPage = () => {
                       handleDriverLicenseNumberChange(e);
                       markFieldTouched(22);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onKeyPress={handleDriverLicenseNumberKeyPress}
                     onBlur={() => markFieldTouched(22)}
                     placeholder={driverLicenseState 
@@ -4009,6 +4192,7 @@ const FormPage = () => {
                       handleEmployerChange(e);
                       markFieldTouched(25);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(25)}
                     placeholder="Enter your employer's name"
                     className={`
@@ -4150,6 +4334,7 @@ const FormPage = () => {
                     type="text"
                     value={occupation}
                     onChange={handleOccupationChange}
+                    onKeyDown={handleEnterKeyDown}
                     placeholder="Enter your occupation"
                     className={`
                       w-full px-4 py-3.5 text-base
@@ -4588,6 +4773,7 @@ const FormPage = () => {
                       handleFirstNameChange(e);
                       markFieldTouched(33);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(33)}
                     placeholder="First Name"
                     className={`
@@ -4612,6 +4798,7 @@ const FormPage = () => {
                       handleLastNameChange(e);
                       markFieldTouched(33);
                     }}
+                    onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(33)}
                     placeholder="Last Name"
                     className={`
