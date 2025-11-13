@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendWelcomeEmail } from '@/app/utils/emailService'
+// Email service disabled
+// import { sendWelcomeEmail } from '@/app/utils/emailService'
 
 export async function POST(request: NextRequest) {
   try {
@@ -505,10 +506,11 @@ export async function POST(request: NextRequest) {
 
     if (result.status === 'ACCEPTED' || result.status === 'DUPLICATED' || result.status === 'ERROR') {
       // Send welcome email (non-blocking - don't fail form submission if email fails)
-      sendWelcomeEmail({ email: email.trim() }).catch((error) => {
-        console.error('Failed to send welcome email:', error);
-        // Email failure shouldn't block form submission
-      });
+      // Email service disabled
+      // sendWelcomeEmail({ email: email.trim() }).catch((error) => {
+      //   console.error('Failed to send welcome email:', error);
+      //   // Email failure shouldn't block form submission
+      // });
       
       // Generate unique access token for thank you page
       const accessToken = crypto.randomUUID();

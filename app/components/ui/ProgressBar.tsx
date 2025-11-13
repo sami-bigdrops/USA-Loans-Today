@@ -62,11 +62,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         </div>
       </div>
       
-      {/* Progress Labels */}
-      <div className="flex justify-between mt-3 text-xs sm:text-sm text-gray-600">
-        <span className="font-semibold">Start</span>
-        <span className="font-semibold">Complete</span>
-      </div>
     </div>
   );
 };

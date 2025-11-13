@@ -7,6 +7,7 @@ import ProgressBar from '@/app/components/ui/ProgressBar';
 import Dropdown from '@/app/components/ui/Dropdown';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/RadioGroup';
 import DatePicker from '@/app/components/ui/DatePicker';
+import AddressAutocomplete from '@/app/components/ui/AddressAutocomplete';
 import { useFormState } from './hooks/useFormState';
 import { useValidation } from './hooks/useValidation';
 import * as validation from './utils/validation';
@@ -2747,6 +2748,12 @@ const FormPage = () => {
                     handleNextPayDateChange(value);
                     markFieldTouched(7);
                   }}
+                  onEnterKeyPress={() => {
+                    if (isStep7Complete) {
+                      setCurrentStep(8);
+                      setProgress(calculateProgress(8));
+                    }
+                  }}
                   placeholder="Select your next pay date..."
                   className="w-full"
                   minDate={new Date()}
@@ -2819,6 +2826,12 @@ const FormPage = () => {
                   onChange={(value) => {
                     handleSecondPayDateChange(value);
                     markFieldTouched(8);
+                  }}
+                  onEnterKeyPress={() => {
+                    if (isStep8Complete) {
+                      setCurrentStep(9);
+                      setProgress(calculateProgress(9));
+                    }
                   }}
                   placeholder="Select your second pay date..."
                   className="w-full"
@@ -3497,16 +3510,16 @@ const FormPage = () => {
               {/* Street Address Input */}
               <div className="mb-4">
                 <div className="relative">
-                  <input
-                    type="text"
+                  <AddressAutocomplete
                     value={streetAddress}
-                    onChange={(e) => {
-                      setStreetAddress(e.target.value);
+                    onChange={(value) => {
+                      setStreetAddress(value);
                       markFieldTouched(16);
                     }}
                     onKeyDown={handleEnterKeyDown}
                     onBlur={() => markFieldTouched(16)}
                     placeholder="Enter your street address"
+                    zipCode={zipCode}
                     className={`
                       w-full px-4 py-3.5 text-base
                       border-2 rounded-lg
@@ -4881,6 +4894,12 @@ const FormPage = () => {
                     handleBirthdateChange(value);
                     markFieldTouched(34);
                   }}
+                  onEnterKeyPress={() => {
+                    if (isStep34Complete) {
+                      setCurrentStep(35);
+                      setProgress(calculateProgress(35));
+                    }
+                  }}
                   placeholder="Select your birthdate"
                   maxDate={new Date()} // Cannot select future dates
                   minDate={new Date(new Date().getFullYear() - 120, 0, 1)} // Allow up to 120 years ago
@@ -5143,13 +5162,6 @@ const FormPage = () => {
                 )}
               </div>
 
-              {/* Consent Message in Green Box */}
-              <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  I consent to be contacted at the telephone number I disclose above. By providing my phone number and clicking on the &quot;Continue&quot; button above, I provide my express consent to be contacted at the telephone number by USA Loans Today and our Marketing Partners in connection with my loan request, for other marketing purposes, and related to credit or credit repair offers, including contact through automatic dialing systems, artificial or pre-recorded voice messaging, or text message. I understand that my consent applies to these text messages and telemarketing calls even if I have subscribed to a federal, state, or company &quot;Do Not Call&quot; registry. Message and data rates may apply. To opt-out, please follow the unsubscribe instructions within the text message. Clicking &quot;Next&quot; shall be my electronic signature to this consent.
-                </p>
-              </div>
-
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -5185,6 +5197,13 @@ const FormPage = () => {
                     `} 
                   />
                 </button>
+              </div>
+
+              {/* Consent Message in Gray Box */}
+              <div className="mt-6 p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  I consent to be contacted at the telephone number I disclose above. By providing my phone number and clicking on the &quot;Continue&quot; button above, I provide my express consent to be contacted at the telephone number by USA Loans Today and our Marketing Partners in connection with my loan request, for other marketing purposes, and related to credit or credit repair offers, including contact through automatic dialing systems, artificial or pre-recorded voice messaging, or text message. I understand that my consent applies to these text messages and telemarketing calls even if I have subscribed to a federal, state, or company &quot;Do Not Call&quot; registry. Message and data rates may apply. To opt-out, please follow the unsubscribe instructions within the text message. Clicking &quot;Next&quot; shall be my electronic signature to this consent.
+                </p>
               </div>
             </div>
           )}
@@ -5233,25 +5252,6 @@ const FormPage = () => {
                 )}
               </div>
 
-              {/* Terms and Conditions */}
-              <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-700 leading-relaxed">
-                  <p className="mb-3">
-                    By providing my Social Security Number and clicking on &quot;Submit&quot; above, I consent, acknowledge, and agree to the following:
-                  </p>
-                  <ul className="list-disc list-inside space-y-2 ml-2">
-                    <li>
-                      <a href="/terms" className="text-[#313863] hover:underline">Terms of Service</a>, <a href="/privacy-policy" className="text-[#313863] hover:underline">Privacy Policy</a>, <a href="/terms#credit-authorization" className="text-[#313863] hover:underline credit-authorization-agreement">Credit Authorization Agreement</a>
-                    </li>
-                    <li>By continuing with the loan request process. USA Loans Today may use the report to authenticate your identity and connect you with products or services. The inquiry is a soft pull of your consumer report and does not affect your credit score.</li>
-                    <li>I understand my information will be presented to a network of lenders and/or lending partners, and those lenders and/or lending partners will review and verify my information in order to determine if I may qualify for a loan. I acknowledge that lenders, lending partners, and other financial service providers may share my personal information, including approval status and funded status.</li>
-                    <li>I understand that if I am not connected with a personal loan lender and/or lending partner at the requested amount, my information may be shown to additional lenders and/or lending partners who provide lower loan amounts and higher rates. I also understand that if I am not connected with a Lender I may be connected with other financial service providers that offer products associated with my selected loan purpose.</li>
-                    <li>There is no hard credit check on the consumer at any time.</li>
-                    <li>I certify that all information herein is true and complete.</li>
-                  </ul>
-                </div>
-              </div>
-
               {/* Navigation Buttons */}
               <div className="flex gap-4">
                 <button
@@ -5292,6 +5292,25 @@ const FormPage = () => {
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  <p className="mb-3">
+                    By providing my Social Security Number and clicking on &quot;Submit&quot; above, I consent, acknowledge, and agree to the following:
+                  </p>
+                  <ul className="list-disc list-inside space-y-2 ml-2">
+                    <li>
+                      <a href="/terms" className="text-[#313863] hover:underline">Terms of Service</a>, <a href="/privacy-policy" className="text-[#313863] hover:underline">Privacy Policy</a>, <a href="/terms#credit-authorization" className="text-[#313863] hover:underline credit-authorization-agreement">Credit Authorization Agreement</a>
+                    </li>
+                    <li>By continuing with the loan request process. USA Loans Today may use the report to authenticate your identity and connect you with products or services. The inquiry is a soft pull of your consumer report and does not affect your credit score.</li>
+                    <li>I understand my information will be presented to a network of lenders and/or lending partners, and those lenders and/or lending partners will review and verify my information in order to determine if I may qualify for a loan. I acknowledge that lenders, lending partners, and other financial service providers may share my personal information, including approval status and funded status.</li>
+                    <li>I understand that if I am not connected with a personal loan lender and/or lending partner at the requested amount, my information may be shown to additional lenders and/or lending partners who provide lower loan amounts and higher rates. I also understand that if I am not connected with a Lender I may be connected with other financial service providers that offer products associated with my selected loan purpose.</li>
+                    <li>There is no hard credit check on the consumer at any time.</li>
+                    <li>I certify that all information herein is true and complete.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}
