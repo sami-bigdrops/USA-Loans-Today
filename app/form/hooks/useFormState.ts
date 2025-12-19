@@ -51,6 +51,8 @@ export const useFormState = () => {
   const [ssn, setSsn] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLookingUpBank, setIsLookingUpBank] = useState<boolean>(false);
+  const [isValidatingZip, setIsValidatingZip] = useState<boolean>(false);
+  const [zipCodeError, setZipCodeError] = useState<string>('');
   const [touchedFields, setTouchedFields] = useState<Record<number, boolean>>({});
   
   const previousStepRef = useRef<number>(1);
@@ -167,6 +169,10 @@ export const useFormState = () => {
     setIsSubmitting,
     isLookingUpBank,
     setIsLookingUpBank,
+    isValidatingZip,
+    setIsValidatingZip,
+    zipCodeError,
+    setZipCodeError,
     touchedFields,
     markFieldTouched,
     previousStepRef,

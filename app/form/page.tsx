@@ -119,6 +119,10 @@ const FormPage = () => {
     setIsSubmitting,
     isLookingUpBank,
     setIsLookingUpBank,
+    isValidatingZip,
+    setIsValidatingZip,
+    zipCodeError,
+    setZipCodeError,
     touchedFields,
     markFieldTouched,
     previousStepRef,
@@ -1209,7 +1213,7 @@ const FormPage = () => {
           }
           break;
           case 15:
-            if (zipCode.length === 5) {
+            if (zipCode.length === 5 && !zipCodeError) {
               handleZipCodeContinue();
             }
             break;
@@ -1297,13 +1301,74 @@ const FormPage = () => {
     // Only allow digits and limit to 5 digits
     const digitsOnly = value.replace(/[^\d]/g, '').slice(0, 5);
     setZipCode(digitsOnly);
+    // Clear error when user starts typing
+    if (zipCodeError) {
+      setZipCodeError('');
+    }
   };
 
-  const handleZipCodeContinue = () => {
-    if (zipCode.length === 5) {
-      setCurrentStep(16);
-      setProgress(calculateProgress(16));
+  const validateZipCode = async (zip: string): Promise<{ valid: boolean; isNewYork: boolean; city?: string; error?: string }> => {
+    if (zip.length !== 5) {
+      return { valid: false, isNewYork: false, error: 'Please enter a valid 5-digit US zip code' };
     }
+
+    try {
+      setIsValidatingZip(true);
+      // Use Next.js API route to avoid CORS issues
+      const response = await fetch(`/api/validate-zip?zip=${zip}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { 
+          valid: false, 
+          isNewYork: false, 
+          error: errorData.error || 'Please enter a valid US zip code' 
+        };
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        return { 
+          valid: false, 
+          isNewYork: data.isNewYork || false, 
+          error: data.error 
+        };
+      }
+
+      return { 
+        valid: data.valid || false, 
+        isNewYork: data.isNewYork || false, 
+        city: data.city 
+      };
+    } catch (error) {
+      console.error('Zip code validation error:', error);
+      return { valid: false, isNewYork: false, error: 'Please enter a valid US zip code' };
+    } finally {
+      setIsValidatingZip(false);
+    }
+  };
+
+  const handleZipCodeContinue = async () => {
+    if (zipCode.length !== 5) {
+      setZipCodeError('Please enter a valid 5-digit US zip code');
+      return;
+    }
+
+    const validation = await validateZipCode(zipCode);
+    
+    if (!validation.valid) {
+      setZipCodeError(validation.error || 'Please enter a valid US zip code');
+      return;
+    }
+
+    // If valid and not New York, store city and proceed to next step
+    setZipCodeError('');
+    if (validation.city) {
+      setZipCodeCity(validation.city);
+    }
+    setCurrentStep(16);
+    setProgress(calculateProgress(16));
   };
 
   const handleNextPayDateChange = (value: string) => {
@@ -3718,20 +3783,44 @@ const FormPage = () => {
                     onBlur={() => markFieldTouched(15)}
                     placeholder="12345"
                     maxLength={5}
+                    disabled={isValidatingZip}
                     className={`
                       w-full px-4 py-3.5 text-base
                       border-2 rounded-lg
                       transition-all duration-200
                       focus:outline-none
-                      ${zipCode.length === 5
-                        ? 'border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
-                        : 'border-gray-300 focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
+                      ${isValidatingZip ? 'opacity-50 cursor-wait' : ''}
+                      ${zipCodeError
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
+                        : zipCode.length === 5
+                          ? 'border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
+                          : 'border-gray-300 focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
                       }
                       text-[--text] font-medium
                     `}
                   />
+                  {isValidatingZip && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg className="animate-spin h-5 w-5 text-[#313863]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
                 </div>
+                {isValidatingZip && (
+                  <p className="mt-2 text-sm text-gray-600">Validating zip code...</p>
+                )}
               </div>
+
+              {/* Error Message */}
+              {zipCodeError && (
+                <div className="mb-6 p-4 rounded-lg border-2 bg-red-50 border-red-200">
+                  <p className="text-sm sm:text-base font-medium text-red-800">
+                    {zipCodeError}
+                  </p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex gap-4">
@@ -3744,24 +3833,36 @@ const FormPage = () => {
                 </button>
                 <button
                   onClick={handleZipCodeContinue}
-                  disabled={zipCode.length !== 5}
+                  disabled={zipCode.length !== 5 || isValidatingZip}
                   className={`
                     flex-1 px-6 py-3.5 font-semibold rounded-lg shadow-md 
                     transition-all duration-200 flex items-center justify-center gap-2 group
-                    ${zipCode.length === 5
+                    ${zipCode.length === 5 && !isValidatingZip
                       ? 'bg-[#313863] text-white hover:bg-[#252b4d] cursor-pointer'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }
                   `}
                 >
-                  Continue
-                  <ArrowRight 
-                    size={20} 
-                    className={`
-                      transition-transform duration-200
-                      ${zipCode.length === 5 ? 'group-hover:translate-x-1' : ''}
-                    `} 
-                  />
+                  {isValidatingZip ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Validating...
+                    </>
+                  ) : (
+                    <>
+                      Continue
+                      <ArrowRight 
+                        size={20} 
+                        className={`
+                          transition-transform duration-200
+                          ${zipCode.length === 5 && !isValidatingZip ? 'group-hover:translate-x-1' : ''}
+                        `} 
+                      />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
