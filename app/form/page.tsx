@@ -164,22 +164,76 @@ const FormPage = () => {
     setTrustedFormCertUrl(certUrl);
   };
 
+  // Cookie utility functions
+  const getCookie = (name: string): string => {
+    if (typeof window === 'undefined') return '';
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop()?.split(';').shift() || '');
+    return '';
+  };
+
+  const setCookie = (name: string, value: string, days: number = 30): void => {
+    if (typeof window === 'undefined') return;
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+  };
+
+  const deleteCookie = (name: string): void => {
+    if (typeof window === 'undefined') return;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  };
+
+  const clearFormCookies = (): void => {
+    const cookieNames = [
+      'form_currentStep',
+      'form_spendingPurpose',
+      'form_creditScore',
+      'form_employmentStatus',
+      'form_paymentFrequency',
+      'form_monthlyIncome',
+      'form_debtAmount',
+      'form_nextPayDate',
+      'form_secondPayDate',
+      'form_hasCheckingAccount',
+      'form_hasDirectDeposit',
+      'form_bankAccountDuration',
+      'form_bankRoutingNumber',
+      'form_bankName',
+      'form_bankAccountNumber',
+      'form_zipCode',
+      'form_zipCodeCity',
+      'form_streetAddress',
+      'form_homeOwnership',
+      'form_addressDuration',
+      'form_email',
+      'form_vehicleStatus',
+      'form_driverLicenseState',
+      'form_driverLicenseNumber',
+      'form_isMilitaryMember',
+      'form_unsecuredDebtAmount',
+      'form_employer',
+      'form_employerDuration',
+      'form_occupation',
+      'form_monthlyHousingPayment',
+      'form_hasFiledBankruptcy',
+      'form_bankruptcyChapter',
+      'form_bankruptcyStatus',
+      'form_bankruptcyDischargedInLast2Years',
+      'form_firstName',
+      'form_lastName',
+      'form_birthdate',
+      'form_homePhoneNumber',
+      'form_workPhoneNumber',
+      'form_phoneNumber',
+      'form_ssn',
+    ];
+    cookieNames.forEach(name => deleteCookie(name));
+  };
+
   // UTM Parameter Detection with Cookie Fallback
   useEffect(() => {
-    // Helper function to get cookie value
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift() || '';
-      return '';
-    };
-
-    // Helper function to set cookie
-    const setCookie = (name: string, value: string, days: number = 30) => {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-    };
 
     const urlParams = new URLSearchParams(window.location.search);
     let utmSource = urlParams.get("utm_source") || "";
@@ -207,6 +261,232 @@ const FormPage = () => {
     setSubid3(utmS1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load form data from cookies on mount
+  useEffect(() => {
+    const savedStep = getCookie('form_currentStep');
+    if (savedStep) {
+      const step = parseInt(savedStep, 10);
+      if (step >= 1 && step <= TOTAL_STEPS) {
+        setCurrentStep(step);
+        setProgress(calculateProgress(step));
+      }
+    }
+
+    // Load all form fields from cookies
+    const savedSpendingPurpose = getCookie('form_spendingPurpose');
+    if (savedSpendingPurpose) setSpendingPurpose(savedSpendingPurpose);
+
+    const savedCreditScore = getCookie('form_creditScore');
+    if (savedCreditScore) setCreditScore(savedCreditScore);
+
+    const savedEmploymentStatus = getCookie('form_employmentStatus');
+    if (savedEmploymentStatus) setEmploymentStatus(savedEmploymentStatus);
+
+    const savedPaymentFrequency = getCookie('form_paymentFrequency');
+    if (savedPaymentFrequency) setPaymentFrequency(savedPaymentFrequency);
+
+    const savedMonthlyIncome = getCookie('form_monthlyIncome');
+    if (savedMonthlyIncome) setMonthlyIncome(savedMonthlyIncome);
+
+    const savedDebtAmount = getCookie('form_debtAmount');
+    if (savedDebtAmount) setDebtAmount(savedDebtAmount);
+
+    const savedNextPayDate = getCookie('form_nextPayDate');
+    if (savedNextPayDate) setNextPayDate(savedNextPayDate);
+
+    const savedSecondPayDate = getCookie('form_secondPayDate');
+    if (savedSecondPayDate) setSecondPayDate(savedSecondPayDate);
+
+    const savedHasCheckingAccount = getCookie('form_hasCheckingAccount');
+    if (savedHasCheckingAccount) setHasCheckingAccount(savedHasCheckingAccount);
+
+    const savedHasDirectDeposit = getCookie('form_hasDirectDeposit');
+    if (savedHasDirectDeposit) setHasDirectDeposit(savedHasDirectDeposit);
+
+    const savedBankAccountDuration = getCookie('form_bankAccountDuration');
+    if (savedBankAccountDuration) setBankAccountDuration(savedBankAccountDuration);
+
+    const savedBankRoutingNumber = getCookie('form_bankRoutingNumber');
+    if (savedBankRoutingNumber) setBankRoutingNumber(savedBankRoutingNumber);
+
+    const savedBankName = getCookie('form_bankName');
+    if (savedBankName) setBankName(savedBankName);
+
+    const savedBankAccountNumber = getCookie('form_bankAccountNumber');
+    if (savedBankAccountNumber) setBankAccountNumber(savedBankAccountNumber);
+
+    const savedZipCode = getCookie('form_zipCode');
+    if (savedZipCode) setZipCode(savedZipCode);
+
+    const savedZipCodeCity = getCookie('form_zipCodeCity');
+    if (savedZipCodeCity) setZipCodeCity(savedZipCodeCity);
+
+    const savedStreetAddress = getCookie('form_streetAddress');
+    if (savedStreetAddress) setStreetAddress(savedStreetAddress);
+
+    const savedHomeOwnership = getCookie('form_homeOwnership');
+    if (savedHomeOwnership) setHomeOwnership(savedHomeOwnership);
+
+    const savedAddressDuration = getCookie('form_addressDuration');
+    if (savedAddressDuration) setAddressDuration(savedAddressDuration);
+
+    const savedEmail = getCookie('form_email');
+    if (savedEmail) setEmail(savedEmail);
+
+    const savedVehicleStatus = getCookie('form_vehicleStatus');
+    if (savedVehicleStatus) setVehicleStatus(savedVehicleStatus);
+
+    const savedDriverLicenseState = getCookie('form_driverLicenseState');
+    if (savedDriverLicenseState) setDriverLicenseState(savedDriverLicenseState);
+
+    const savedDriverLicenseNumber = getCookie('form_driverLicenseNumber');
+    if (savedDriverLicenseNumber) setDriverLicenseNumber(savedDriverLicenseNumber);
+
+    const savedIsMilitaryMember = getCookie('form_isMilitaryMember');
+    if (savedIsMilitaryMember) setIsMilitaryMember(savedIsMilitaryMember);
+
+    const savedUnsecuredDebtAmount = getCookie('form_unsecuredDebtAmount');
+    if (savedUnsecuredDebtAmount) setUnsecuredDebtAmount(savedUnsecuredDebtAmount);
+
+    const savedEmployer = getCookie('form_employer');
+    if (savedEmployer) setEmployer(savedEmployer);
+
+    const savedEmployerDuration = getCookie('form_employerDuration');
+    if (savedEmployerDuration) setEmployerDuration(savedEmployerDuration);
+
+    const savedOccupation = getCookie('form_occupation');
+    if (savedOccupation) setOccupation(savedOccupation);
+
+    const savedMonthlyHousingPayment = getCookie('form_monthlyHousingPayment');
+    if (savedMonthlyHousingPayment) setMonthlyHousingPayment(savedMonthlyHousingPayment);
+
+    const savedHasFiledBankruptcy = getCookie('form_hasFiledBankruptcy');
+    if (savedHasFiledBankruptcy) setHasFiledBankruptcy(savedHasFiledBankruptcy);
+
+    const savedBankruptcyChapter = getCookie('form_bankruptcyChapter');
+    if (savedBankruptcyChapter) setBankruptcyChapter(savedBankruptcyChapter);
+
+    const savedBankruptcyStatus = getCookie('form_bankruptcyStatus');
+    if (savedBankruptcyStatus) setBankruptcyStatus(savedBankruptcyStatus);
+
+    const savedBankruptcyDischarged = getCookie('form_bankruptcyDischargedInLast2Years');
+    if (savedBankruptcyDischarged) setBankruptcyDischargedInLast2Years(savedBankruptcyDischarged);
+
+    const savedFirstName = getCookie('form_firstName');
+    if (savedFirstName) setFirstName(savedFirstName);
+
+    const savedLastName = getCookie('form_lastName');
+    if (savedLastName) setLastName(savedLastName);
+
+    const savedBirthdate = getCookie('form_birthdate');
+    if (savedBirthdate) setBirthdate(savedBirthdate);
+
+    const savedHomePhoneNumber = getCookie('form_homePhoneNumber');
+    if (savedHomePhoneNumber) setHomePhoneNumber(savedHomePhoneNumber);
+
+    const savedWorkPhoneNumber = getCookie('form_workPhoneNumber');
+    if (savedWorkPhoneNumber) setWorkPhoneNumber(savedWorkPhoneNumber);
+
+    const savedPhoneNumber = getCookie('form_phoneNumber');
+    if (savedPhoneNumber) setPhoneNumber(savedPhoneNumber);
+
+    const savedSsn = getCookie('form_ssn');
+    if (savedSsn) setSsn(savedSsn);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save form data to cookies whenever it changes (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCookie('form_currentStep', currentStep.toString());
+      setCookie('form_spendingPurpose', spendingPurpose);
+      setCookie('form_creditScore', creditScore);
+      setCookie('form_employmentStatus', employmentStatus);
+      setCookie('form_paymentFrequency', paymentFrequency);
+      setCookie('form_monthlyIncome', monthlyIncome);
+      setCookie('form_debtAmount', debtAmount);
+      setCookie('form_nextPayDate', nextPayDate);
+      setCookie('form_secondPayDate', secondPayDate);
+      setCookie('form_hasCheckingAccount', hasCheckingAccount);
+      setCookie('form_hasDirectDeposit', hasDirectDeposit);
+      setCookie('form_bankAccountDuration', bankAccountDuration);
+      setCookie('form_bankRoutingNumber', bankRoutingNumber);
+      setCookie('form_bankName', bankName);
+      setCookie('form_bankAccountNumber', bankAccountNumber);
+      setCookie('form_zipCode', zipCode);
+      setCookie('form_zipCodeCity', zipCodeCity);
+      setCookie('form_streetAddress', streetAddress);
+      setCookie('form_homeOwnership', homeOwnership);
+      setCookie('form_addressDuration', addressDuration);
+      setCookie('form_email', email);
+      setCookie('form_vehicleStatus', vehicleStatus);
+      setCookie('form_driverLicenseState', driverLicenseState);
+      setCookie('form_driverLicenseNumber', driverLicenseNumber);
+      setCookie('form_isMilitaryMember', isMilitaryMember);
+      setCookie('form_unsecuredDebtAmount', unsecuredDebtAmount);
+      setCookie('form_employer', employer);
+      setCookie('form_employerDuration', employerDuration);
+      setCookie('form_occupation', occupation);
+      setCookie('form_monthlyHousingPayment', monthlyHousingPayment);
+      setCookie('form_hasFiledBankruptcy', hasFiledBankruptcy);
+      setCookie('form_bankruptcyChapter', bankruptcyChapter || '');
+      setCookie('form_bankruptcyStatus', bankruptcyStatus || '');
+      setCookie('form_bankruptcyDischargedInLast2Years', bankruptcyDischargedInLast2Years || '');
+      setCookie('form_firstName', firstName);
+      setCookie('form_lastName', lastName);
+      setCookie('form_birthdate', birthdate);
+      setCookie('form_homePhoneNumber', homePhoneNumber);
+      setCookie('form_workPhoneNumber', workPhoneNumber);
+      setCookie('form_phoneNumber', phoneNumber);
+      setCookie('form_ssn', ssn);
+    }, 500); // Debounce: save 500ms after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    currentStep,
+    spendingPurpose,
+    creditScore,
+    employmentStatus,
+    paymentFrequency,
+    monthlyIncome,
+    debtAmount,
+    nextPayDate,
+    secondPayDate,
+    hasCheckingAccount,
+    hasDirectDeposit,
+    bankAccountDuration,
+    bankRoutingNumber,
+    bankName,
+    bankAccountNumber,
+    zipCode,
+    zipCodeCity,
+    streetAddress,
+    homeOwnership,
+    addressDuration,
+    email,
+    vehicleStatus,
+    driverLicenseState,
+    driverLicenseNumber,
+    isMilitaryMember,
+    unsecuredDebtAmount,
+    employer,
+    employerDuration,
+    occupation,
+    monthlyHousingPayment,
+    hasFiledBankruptcy,
+    bankruptcyChapter,
+    bankruptcyStatus,
+    bankruptcyDischargedInLast2Years,
+    firstName,
+    lastName,
+    birthdate,
+    homePhoneNumber,
+    workPhoneNumber,
+    phoneNumber,
+    ssn,
+  ]);
 
   // Use the constant state license formats
   const stateLicenseFormats = STATE_LICENSE_FORMATS;
@@ -2140,6 +2420,8 @@ const FormPage = () => {
       const result = await response.json();
       
       if (result.success) {
+        // Clear form cookies after successful submission
+        clearFormCookies();
         // Redirect to thank you page
         const redirectUrl = result.redirectUrl || `/thankyou?email=${encodeURIComponent(email.trim())}`;
         window.location.href = redirectUrl;
