@@ -13,7 +13,6 @@ interface UseValidationProps {
   bankName: string;
   bankAccountNumber: string;
   zipCode: string;
-  zipCodeError: string;
   streetAddress: string;
   email: string;
   driverLicenseState: string;
@@ -67,7 +66,7 @@ export const useValidation = (props: UseValidationProps) => {
     }
     
     if (props.touchedFields[15]) {
-      const error15 = validation.getStep15Error(props.zipCode, props.zipCodeError);
+      const error15 = validation.getStep15Error(props.zipCode);
       if (error15) errors[15] = error15;
     }
     
@@ -116,7 +115,6 @@ export const useValidation = (props: UseValidationProps) => {
     props.bankName,
     props.bankAccountNumber,
     props.zipCode,
-    props.zipCodeError,
     props.streetAddress,
     props.email,
     props.driverLicenseState,

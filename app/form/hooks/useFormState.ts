@@ -24,7 +24,6 @@ export const useFormState = () => {
   const [bankName, setBankName] = useState<string>('');
   const [bankAccountNumber, setBankAccountNumber] = useState<string>('');
   const [zipCode, setZipCode] = useState<string>('');
-  const [zipCodeError, setZipCodeError] = useState<string>('');
   const [zipCodeCity, setZipCodeCity] = useState<string>('');
   const [streetAddress, setStreetAddress] = useState<string>('');
   const [homeOwnership, setHomeOwnership] = useState<string>('');
@@ -51,7 +50,6 @@ export const useFormState = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [ssn, setSsn] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isValidatingZip, setIsValidatingZip] = useState<boolean>(false);
   const [touchedFields, setTouchedFields] = useState<Record<number, boolean>>({});
   
   const previousStepRef = useRef<number>(1);
@@ -114,8 +112,6 @@ export const useFormState = () => {
     setBankAccountNumber,
     zipCode,
     setZipCode,
-    zipCodeError,
-    setZipCodeError,
     zipCodeCity,
     setZipCodeCity,
     streetAddress,
@@ -168,8 +164,6 @@ export const useFormState = () => {
     setSsn,
     isSubmitting,
     setIsSubmitting,
-    isValidatingZip,
-    setIsValidatingZip,
     touchedFields,
     markFieldTouched,
     previousStepRef,

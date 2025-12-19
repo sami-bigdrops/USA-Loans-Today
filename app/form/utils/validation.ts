@@ -62,12 +62,9 @@ export const getStep14Error = (value: string): string | null => {
   return null;
 };
 
-export const getStep15Error = (zip: string, zipError: string): string | null => {
+export const getStep15Error = (zip: string): string | null => {
   if (!zip || zip.length !== 5) {
     return 'Zip code must be exactly 5 digits';
-  }
-  if (zipError) {
-    return zipError;
   }
   return null;
 };
