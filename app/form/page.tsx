@@ -217,6 +217,7 @@ const FormPage = () => {
 
   const handleCreditScoreChange = (value: string) => {
     const isAlreadySelected = creditScore === value;
+    // Always update the state, even if it's the same value
     setCreditScore(value);
     // Track user interaction on this step
     lastUserInteractionStepRef.current = 2;
@@ -224,12 +225,14 @@ const FormPage = () => {
     isNavigatingBackRef.current = false;
     // Edge case: if clicking already-selected option, manually trigger auto-proceed
     if (isAlreadySelected && currentStep === 2) {
+      // Use a slightly longer timeout to ensure state is updated
       setTimeout(() => {
         setCurrentStep(3);
         setProgress(calculateProgress(3));
         previousStepRef.current = 3;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -246,8 +249,9 @@ const FormPage = () => {
         setCurrentStep(4);
         setProgress(calculateProgress(4));
         previousStepRef.current = 4;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -264,8 +268,9 @@ const FormPage = () => {
         setCurrentStep(5);
         setProgress(calculateProgress(5));
         previousStepRef.current = 5;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1191,8 +1196,9 @@ const FormPage = () => {
         setCurrentStep(10);
         setProgress(calculateProgress(10));
         previousStepRef.current = 10;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1209,8 +1215,9 @@ const FormPage = () => {
         setCurrentStep(11);
         setProgress(calculateProgress(11));
         previousStepRef.current = 11;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1231,17 +1238,29 @@ const FormPage = () => {
         setCurrentStep(18);
         setProgress(calculateProgress(18));
         previousStepRef.current = 18;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
   const handleAddressDurationChange = (value: string) => {
+    const isAlreadySelected = addressDuration === value;
     setAddressDuration(value);
     // Track user interaction on this step
     lastUserInteractionStepRef.current = 18;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
+    // Edge case: if clicking already-selected option, manually trigger auto-proceed
+    if (isAlreadySelected && currentStep === 18) {
+      setTimeout(() => {
+        setCurrentStep(19);
+        setProgress(calculateProgress(19));
+        previousStepRef.current = 19;
+        isNavigatingBackRef.current = false;
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 100);
+    }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1261,8 +1280,9 @@ const FormPage = () => {
         setCurrentStep(21);
         setProgress(calculateProgress(21));
         previousStepRef.current = 21;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1285,8 +1305,9 @@ const FormPage = () => {
         setCurrentStep(24);
         setProgress(calculateProgress(24));
         previousStepRef.current = 24;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1303,8 +1324,9 @@ const FormPage = () => {
         setCurrentStep(25);
         setProgress(calculateProgress(25));
         previousStepRef.current = 25;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1313,11 +1335,22 @@ const FormPage = () => {
   };
 
   const handleEmployerDurationChange = (value: string) => {
+    const isAlreadySelected = employerDuration === value;
     setEmployerDuration(value);
     // Track user interaction on this step
     lastUserInteractionStepRef.current = 26;
     // Reset navigation flag to allow auto-proceed
     isNavigatingBackRef.current = false;
+    // Edge case: if clicking already-selected option, manually trigger auto-proceed
+    if (isAlreadySelected && currentStep === 26) {
+      setTimeout(() => {
+        setCurrentStep(27);
+        setProgress(calculateProgress(27));
+        previousStepRef.current = 27;
+        isNavigatingBackRef.current = false;
+        lastUserInteractionStepRef.current = null; // Clear after proceeding
+      }, 100);
+    }
   };
 
   const handleOccupationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1436,8 +1469,9 @@ const FormPage = () => {
           setProgress(calculateProgress(33));
           previousStepRef.current = 33;
         }
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1454,8 +1488,9 @@ const FormPage = () => {
         setCurrentStep(31);
         setProgress(calculateProgress(31));
         previousStepRef.current = 31;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1472,8 +1507,9 @@ const FormPage = () => {
         setCurrentStep(32);
         setProgress(calculateProgress(32));
         previousStepRef.current = 32;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1490,8 +1526,9 @@ const FormPage = () => {
         setCurrentStep(33);
         setProgress(calculateProgress(33));
         previousStepRef.current = 33;
+        isNavigatingBackRef.current = false;
         lastUserInteractionStepRef.current = null; // Clear after proceeding
-      }, 200);
+      }, 100);
     }
   };
 
@@ -1589,44 +1626,43 @@ const FormPage = () => {
       
       // Handle backspace to remove separators
       if (e.key === 'Backspace' && cursorPosition > 0) {
-        // If cursor is right after a separator, delete the separator and the digit before it
+        // If cursor is right after a separator, just delete the separator
         const charBefore = value[cursorPosition - 1];
         if (charBefore === ')' || charBefore === '-' || charBefore === ' ' || charBefore === '(') {
           e.preventDefault();
-          // Find the digit before the separator
-          let newPos = cursorPosition - 1;
-          while (newPos > 0 && !/[0-9]/.test(value[newPos - 1])) {
-            newPos--;
-          }
-          if (newPos > 0) {
-            const beforeSeparator = value.substring(0, newPos - 1);
-            const afterSeparator = value.substring(cursorPosition);
-            const newValue = beforeSeparator + afterSeparator;
-            const formatted = formatPhoneNumber(newValue);
-            setValue(formatted);
-            
-            requestAnimationFrame(() => {
-              if (inputRef.current) {
-                // Calculate new cursor position after formatting
-                const digitsBefore = beforeSeparator.replace(/[^\d]/g, '').length;
-                let pos = 0;
-                let digitCount = 0;
-                for (let i = 0; i < formatted.length; i++) {
-                  if (/[0-9]/.test(formatted[i])) {
-                    digitCount++;
-                    if (digitCount === digitsBefore) {
-                      pos = i + 1;
-                      break;
-                    }
-                  }
-                  if (digitCount < digitsBefore) {
+          // Count digits before cursor (before removing separator) to maintain position
+          const beforeCursor = value.substring(0, cursorPosition - 1);
+          const digitsBefore = beforeCursor.replace(/[^\d]/g, '').length;
+          
+          // Remove just the separator character
+          const beforeSeparator = value.substring(0, cursorPosition - 1);
+          const afterSeparator = value.substring(cursorPosition);
+          const newValue = beforeSeparator + afterSeparator;
+          const formatted = formatPhoneNumber(newValue);
+          setValue(formatted);
+          
+          setTimeout(() => {
+            if (inputRef.current) {
+              // Position cursor right after the same number of digits
+              let pos = 0;
+              let digitCount = 0;
+              for (let i = 0; i < formatted.length; i++) {
+                if (/[0-9]/.test(formatted[i])) {
+                  digitCount++;
+                  if (digitCount === digitsBefore) {
+                    // Position cursor right after this digit
                     pos = i + 1;
+                    break;
                   }
                 }
-                inputRef.current.setSelectionRange(Math.max(0, pos), Math.max(0, pos));
               }
-            });
-          }
+              // If we didn't find the exact position, place at end
+              if (digitCount < digitsBefore) {
+                pos = formatted.length;
+              }
+              inputRef.current.setSelectionRange(pos, pos);
+            }
+          }, 0);
         }
       }
     };
@@ -2081,9 +2117,9 @@ const FormPage = () => {
         occupation: occupation.trim(),
         vehicleStatus: vehicleStatus.trim(),
         hasFiledBankruptcy: hasFiledBankruptcy.trim(),
-        bankruptcyChapter: bankruptcyChapter.trim(),
-        bankruptcyStatus: bankruptcyStatus.trim(),
-        bankruptcyDischargedInLast2Years: bankruptcyDischargedInLast2Years.trim(),
+        bankruptcyChapter: (bankruptcyChapter || '').trim(),
+        bankruptcyStatus: (bankruptcyStatus || '').trim(),
+        bankruptcyDischargedInLast2Years: (bankruptcyDischargedInLast2Years || '').trim(),
         
         // Tracking Information
         subid1: subid1.trim(),

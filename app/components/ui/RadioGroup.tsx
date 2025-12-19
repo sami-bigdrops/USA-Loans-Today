@@ -99,8 +99,17 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
     const itemId = id || `${name}-${value}`;
     const generatedLabelId = useId();
 
-    const handleChange = () => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!isDisabled && onChange) {
+        onChange(value);
+      }
+      // Stop propagation to prevent label click from firing again
+      e.stopPropagation();
+    };
+
+    const handleClick = () => {
+      if (!isDisabled && onChange && isChecked) {
+        // If already selected, trigger onChange on click (since input onChange won't fire)
         onChange(value);
       }
     };
@@ -108,6 +117,7 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
     return (
       <label
         htmlFor={itemId}
+        onClick={handleClick}
         className={`
           flex items-center w-full cursor-pointer
           ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}

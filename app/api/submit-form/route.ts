@@ -350,7 +350,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields using mapped values
-    if (!firstName || !lastName || !email || !phone || !zipCodeValue || !homeOwner || !debtAmount || !birthdateValue || !ssn || !streetAddressValue || !zipCodeCityValue || !addressDurationValue || !spendingPurpose || !creditScore || !employmentStatusValue || !paymentFrequencyValue || !monthlyIncome || !nextPayDate || !secondPayDate || !unsecuredDebtAmount || !monthlyHousingPayment || !hasCheckingAccountValue || !hasDirectDeposit || !bankAccountDurationValue || !bankRoutingNumber || !bankName || !bankAccountNumber || !employerValue || !employerDurationValue || !occupation || !vehicleStatus || !driverLicenseStateValue || !driverLicenseNumberValue || !isMilitaryMemberValue || !hasFiledBankruptcy || !bankruptcyChapter || !bankruptcyStatus || !bankruptcyDischargedInLast2Years) {
+    // Bankruptcy fields (30, 31, 32) are only required if hasFiledBankruptcy === 'yes'
+    const isBankruptcyRequired = hasFiledBankruptcy === 'yes';
+    const bankruptcyFieldsValid = !isBankruptcyRequired || (bankruptcyChapter && bankruptcyStatus && bankruptcyDischargedInLast2Years);
+    
+    if (!firstName || !lastName || !email || !phone || !zipCodeValue || !homeOwner || !debtAmount || !birthdateValue || !ssn || !streetAddressValue || !zipCodeCityValue || !addressDurationValue || !spendingPurpose || !creditScore || !employmentStatusValue || !paymentFrequencyValue || !monthlyIncome || !nextPayDate || !secondPayDate || !unsecuredDebtAmount || !monthlyHousingPayment || !hasCheckingAccountValue || !hasDirectDeposit || !bankAccountDurationValue || !bankRoutingNumber || !bankName || !bankAccountNumber || !employerValue || !employerDurationValue || !occupation || !vehicleStatus || !driverLicenseStateValue || !driverLicenseNumberValue || !isMilitaryMemberValue || !hasFiledBankruptcy || !bankruptcyFieldsValid) {
       const missingFields = [];
       if (!firstName) missingFields.push('firstName');
       if (!lastName) missingFields.push('lastName');
@@ -387,9 +391,12 @@ export async function POST(request: NextRequest) {
       if (!driverLicenseNumberValue) missingFields.push('driversLicense');
       if (!isMilitaryMemberValue) missingFields.push('military');
       if (!hasFiledBankruptcy) missingFields.push('hasFiledBankruptcy');
-      if (!bankruptcyChapter) missingFields.push('bankruptcyChapter');
-      if (!bankruptcyStatus) missingFields.push('bankruptcyStatus');
-      if (!bankruptcyDischargedInLast2Years) missingFields.push('bankruptcyDischargedInLast2Years');
+      // Only add bankruptcy fields to missing if bankruptcy is required (hasFiledBankruptcy === 'yes')
+      if (isBankruptcyRequired) {
+        if (!bankruptcyChapter) missingFields.push('bankruptcyChapter');
+        if (!bankruptcyStatus) missingFields.push('bankruptcyStatus');
+        if (!bankruptcyDischargedInLast2Years) missingFields.push('bankruptcyDischargedInLast2Years');
+      }
       return NextResponse.json(
         { error: 'All required fields are missing', missingFields },
         { status: 400 }
@@ -429,12 +436,12 @@ export async function POST(request: NextRequest) {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       email: email.trim(),
-      phone: phone.replace(/\D/g, ''),
-      home_phone: homePhoneValue.replace(/\D/g, ''),
-      work_phone: workPhoneValue.replace(/\D/g, ''),
+      cellPhone: phone.replace(/\D/g, ''),
+      homePhone: homePhoneValue.replace(/\D/g, ''),
+      workPhone: workPhoneValue.replace(/\D/g, ''),
       zip_code: zipCodeValue.trim(),
       debt_amount: debtAmount.trim(),
-      home_owner: homeOwner.trim(),
+      homeOwnership: homeOwner.trim(),
       ip_address: ip,
       user_agent: request.headers.get('user-agent') || '',
       landing_page_url: request.headers.get('referer') || '',
@@ -443,35 +450,35 @@ export async function POST(request: NextRequest) {
       birthdate: birthdateValue || '',
       ssn: ssn || '',
       street_address: streetAddressValue || '',
-      zip_code_city: zipCodeCityValue || '',
-      address_duration: addressDurationValue || '',
-      spending_purpose: spendingPurpose || '',
-      credit_score: creditScore || '',
-      employment_status: employmentStatusValue || '',
-      payment_frequency: paymentFrequencyValue || '',
-      monthly_income: monthlyIncome || '',
-      next_pay_date: nextPayDate || '',
-      second_pay_date: secondPayDate || '',
-      unsecured_debt_amount: unsecuredDebtAmount || '',
-      monthly_housing_payment: monthlyHousingPayment || '',
-      has_checking_account: hasCheckingAccountValue || '',
-      has_direct_deposit: hasDirectDeposit || '',
-      bank_account_duration: bankAccountDurationValue || '',
-      bank_routing_number: bankRoutingNumber || '',
-      bank_name: bankName || '',
-      bank_account_number: bankAccountNumber || '',
-      employer: employerValue || '',
-      employer_duration: employerDurationValue || '',
-      occupation: occupation || '',
-      vehicle_status: vehicleStatus || '',
-      driver_license_state: driverLicenseStateValue || '',
-      driver_license_number: driverLicenseNumberValue || '',
-      is_military_member: isMilitaryMemberValue || '',
-      has_filed_bankruptcy: hasFiledBankruptcy || '',
-      bankruptcy_chapter: bankruptcyChapter || '',
-      bankruptcy_status: bankruptcyStatus || '',
-      bankruptcy_discharged_in_last_2_years: bankruptcyDischargedInLast2Years || '',
-      loan_amount: loanAmount || '',
+      city: zipCodeCityValue || '',
+      monthsAtAddress: addressDurationValue || '',
+      loanPurpose: spendingPurpose || '',
+      creditScore: creditScore || '',
+      employmentStatus: employmentStatusValue || '',
+      payFrequency: paymentFrequencyValue || '',
+      monthlyIncome: monthlyIncome || '',
+      nextPayDate: nextPayDate || '',
+      secondPayDate: secondPayDate || '',
+      totalDebtAmount: unsecuredDebtAmount || '',
+      monthlyHousingPayment: monthlyHousingPayment || '',
+      bankAccountType: hasCheckingAccountValue || '',
+      payType: hasDirectDeposit || '',
+      monthsAtBank: bankAccountDurationValue || '',
+      bankRoutingNumber: bankRoutingNumber || '',
+      bankName: bankName || '',
+      bankAccountNumber: bankAccountNumber || '',
+      employerName: employerValue || '',
+      monthsEmployed: employerDurationValue || '',
+      employmentType: occupation || '',
+      vehicleStatus: vehicleStatus || '',
+      driverLicenseState: driverLicenseStateValue || '',
+      driverLicense: driverLicenseNumberValue || '',
+      military: isMilitaryMemberValue || '',
+      hasFiledBankruptcy: hasFiledBankruptcy || '',
+      bankruptcyChapter: bankruptcyChapter || '',
+      bankruptcyStatus: bankruptcyStatus || '',
+      bankruptcyDischargedInLast2Years: bankruptcyDischargedInLast2Years || '',
+      loanAmount: loanAmount || '',
     };
 
     // Log form submission for monitoring (production logging)

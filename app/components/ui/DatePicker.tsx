@@ -340,30 +340,30 @@ const DatePicker: React.FC<DatePickerProps> = ({
             }
           }}
           placeholder={placeholder}
-          className={`
+        className={`
             w-full px-4 py-3.5 pr-12 bg-white border-2 rounded-lg
-            transition-all duration-200
-            ${isOpen
-              ? 'border-[#313863] shadow-lg ring-2 ring-[#313863]/20'
-              : 'border-gray-300 hover:border-[#313863] hover:shadow-md focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
-            }
+          transition-all duration-200
+          ${isOpen
+            ? 'border-[#313863] shadow-lg ring-2 ring-[#313863]/20'
+            : 'border-gray-300 hover:border-[#313863] hover:shadow-md focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
+          }
             ${displayValue ? 'text-[--text] font-medium' : 'text-gray-500'}
             outline-none
-          `}
+        `}
         />
         <button
           type="button"
           onClick={handleToggleCalendar}
           className="absolute right-2 p-1 hover:bg-gray-100 rounded transition-colors"
-        >
-          <CalendarIcon
-            size={20}
-            className={`
+      >
+        <CalendarIcon
+          size={20}
+          className={`
               text-gray-400 transition-colors duration-200
-              ${isOpen ? 'text-[#313863]' : ''}
-            `}
-          />
-        </button>
+            ${isOpen ? 'text-[#313863]' : ''}
+          `}
+        />
+      </button>
       </div>
 
       {/* Calendar Dropdown */}
