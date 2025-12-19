@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from "@/app/ult/Navbar";
 import Hero from "@/app/ult/Hero";
@@ -20,6 +20,33 @@ export default function Home() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<string | undefined>(undefined);
+
+  // Cookie utility function
+  const setCookie = (name: string, value: string, days: number = 30): void => {
+    if (typeof window === 'undefined') return;
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+  };
+
+  // UTM Parameter Detection and Cookie Storage
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmSource = urlParams.get("utm_source") || "";
+    const utmId = urlParams.get("utm_id") || "";
+    const utmS1 = urlParams.get("utm_s1") || "";
+
+    // If URL parameters exist, use them and save to cookies
+    if (utmSource || utmId || utmS1) {
+      if (utmSource) setCookie('subid1', utmSource);
+      if (utmId) setCookie('subid2', utmId);
+      if (utmS1) setCookie('subid3', utmS1);
+      
+      // Clean the URL by removing UTM parameters
+      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);

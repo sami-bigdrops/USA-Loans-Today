@@ -69,10 +69,14 @@ export const getStep15Error = (zip: string): string | null => {
   return null;
 };
 
-export const getStep16Error = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 2 || trimmed.length > 255) {
+export const getStep16Error = (streetAddress: string, state: string): string | null => {
+  const trimmedAddress = streetAddress.trim();
+  if (!trimmedAddress || trimmedAddress.length < 2 || trimmedAddress.length > 255) {
     return 'Address must be between 2 and 255 characters';
+  }
+  const trimmedState = state.trim();
+  if (!trimmedState || trimmedState.length !== 2) {
+    return 'Please select a state';
   }
   return null;
 };

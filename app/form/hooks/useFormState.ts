@@ -25,6 +25,7 @@ export const useFormState = () => {
   const [bankAccountNumber, setBankAccountNumber] = useState<string>('');
   const [zipCode, setZipCode] = useState<string>('');
   const [zipCodeCity, setZipCodeCity] = useState<string>('');
+  const [state, setState] = useState<string>('');
   const [streetAddress, setStreetAddress] = useState<string>('');
   const [homeOwnership, setHomeOwnership] = useState<string>('');
   const [addressDuration, setAddressDuration] = useState<string>('');
@@ -117,6 +118,8 @@ export const useFormState = () => {
     setZipCode,
     zipCodeCity,
     setZipCodeCity,
+    state,
+    setState,
     streetAddress,
     setStreetAddress,
     homeOwnership,

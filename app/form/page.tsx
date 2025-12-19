@@ -67,6 +67,8 @@ const FormPage = () => {
     setZipCode,
     zipCodeCity,
     setZipCodeCity,
+    state,
+    setState,
     streetAddress,
     setStreetAddress,
     homeOwnership,
@@ -150,6 +152,7 @@ const FormPage = () => {
     bankAccountNumber,
     zipCode,
     streetAddress,
+    state,
     email,
     driverLicenseState,
     driverLicenseNumber,
@@ -162,7 +165,10 @@ const FormPage = () => {
 
   // Handle TrustedForm certificate data
   const handleTrustedFormReady = (certUrl: string) => {
-    setTrustedFormCertUrl(certUrl);
+    if (certUrl && certUrl.trim() !== '') {
+      setTrustedFormCertUrl(certUrl);
+      console.log('TrustedForm certificate captured:', certUrl);
+    }
   };
 
   // Cookie utility functions
@@ -205,6 +211,7 @@ const FormPage = () => {
       'form_bankAccountNumber',
       'form_zipCode',
       'form_zipCodeCity',
+      'form_state',
       'form_streetAddress',
       'form_homeOwnership',
       'form_addressDuration',
@@ -233,29 +240,12 @@ const FormPage = () => {
     cookieNames.forEach(name => deleteCookie(name));
   };
 
-  // UTM Parameter Detection with Cookie Fallback
+  // UTM Parameter Detection - Read from cookies (captured on home page)
   useEffect(() => {
-
-    const urlParams = new URLSearchParams(window.location.search);
-    let utmSource = urlParams.get("utm_source") || "";
-    let utmId = urlParams.get("utm_id") || "";
-    let utmS1 = urlParams.get("utm_s1") || "";
-
-    // If URL parameters exist, use them and save to cookies
-    if (utmSource || utmId || utmS1) {
-      if (utmSource) setCookie('subid1', utmSource);
-      if (utmId) setCookie('subid2', utmId);
-      if (utmS1) setCookie('subid3', utmS1);
-      
-      // Clean the URL by removing UTM parameters
-      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-    } else {
-      // If no URL parameters, try to read from cookies
-      utmSource = getCookie('subid1') || "";
-      utmId = getCookie('subid2') || "";
-      utmS1 = getCookie('subid3') || "";
-    }
+    // Read UTM parameters from cookies (set on home page)
+    const utmSource = getCookie('subid1') || "";
+    const utmId = getCookie('subid2') || "";
+    const utmS1 = getCookie('subid3') || "";
 
     setSubid1(utmSource);
     setSubid2(utmId);
@@ -322,6 +312,9 @@ const FormPage = () => {
 
     const savedZipCodeCity = getCookie('form_zipCodeCity');
     if (savedZipCodeCity) setZipCodeCity(savedZipCodeCity);
+
+    const savedState = getCookie('form_state');
+    if (savedState) setState(savedState);
 
     const savedStreetAddress = getCookie('form_streetAddress');
     if (savedStreetAddress) setStreetAddress(savedStreetAddress);
@@ -418,6 +411,7 @@ const FormPage = () => {
       setCookie('form_bankAccountNumber', bankAccountNumber);
       setCookie('form_zipCode', zipCode);
       setCookie('form_zipCodeCity', zipCodeCity);
+      setCookie('form_state', state);
       setCookie('form_streetAddress', streetAddress);
       setCookie('form_homeOwnership', homeOwnership);
       setCookie('form_addressDuration', addressDuration);
@@ -463,6 +457,7 @@ const FormPage = () => {
     bankAccountNumber,
     zipCode,
     zipCodeCity,
+    state,
     streetAddress,
     homeOwnership,
     addressDuration,
@@ -1136,7 +1131,7 @@ const FormPage = () => {
   const isStep12Complete = bankRoutingNumber.replace(/[^\d]/g, '').length === 9 && validation.getStep12Error(bankRoutingNumber) === null;
   const isStep13Complete = bankName.trim() !== '' && validation.getStep13Error(bankName) === null;
   const isStep14Complete = bankAccountNumber.trim() !== '' && validation.getStep14Error(bankAccountNumber) === null;
-  const isStep16Complete = streetAddress.trim() !== '' && validation.getStep16Error(streetAddress) === null;
+  const isStep16Complete = streetAddress.trim() !== '' && state.trim() !== '' && validation.getStep16Error(streetAddress, state) === null;
   const isStep19Complete = email.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && validation.getStep19Error(email) === null;
   const isStep21Complete = driverLicenseState !== '' && validation.getStep21Error(driverLicenseState) === null;
   const isStep22Complete = (() => {
@@ -1307,7 +1302,7 @@ const FormPage = () => {
     }
   };
 
-  const validateZipCode = async (zip: string): Promise<{ valid: boolean; isNewYork: boolean; city?: string; error?: string }> => {
+  const validateZipCode = async (zip: string): Promise<{ valid: boolean; isNewYork: boolean; city?: string; stateAbbreviation?: string; error?: string }> => {
     if (zip.length !== 5) {
       return { valid: false, isNewYork: false, error: 'Please enter a valid 5-digit US zip code' };
     }
@@ -1339,7 +1334,8 @@ const FormPage = () => {
       return { 
         valid: data.valid || false, 
         isNewYork: data.isNewYork || false, 
-        city: data.city 
+        city: data.city,
+        stateAbbreviation: data.stateAbbreviation
       };
     } catch (error) {
       console.error('Zip code validation error:', error);
@@ -1362,10 +1358,13 @@ const FormPage = () => {
       return;
     }
 
-    // If valid and not New York, store city and proceed to next step
+    // If valid and not New York, store city and state and proceed to next step
     setZipCodeError('');
     if (validation.city) {
       setZipCodeCity(validation.city);
+    }
+    if (validation.stateAbbreviation) {
+      setState(validation.stateAbbreviation);
     }
     setCurrentStep(16);
     setProgress(calculateProgress(16));
@@ -2229,12 +2228,42 @@ const FormPage = () => {
     setIsSubmitting(true);
     
     try {
-      // Get TrustedForm certificate URL - try to get it if not already in state
+      // Get TrustedForm certificate URL - try multiple methods to ensure we get it
       let certUrl = trustedFormCertUrl;
-      if (!certUrl) {
+      if (!certUrl || certUrl.trim() === '') {
         // Try to get certificate URL from the hidden input field
         const certUrlElement = document.getElementById('xxTrustedFormCertUrl_0') as HTMLInputElement;
         certUrl = certUrlElement?.value || '';
+      }
+      // Final fallback: check if TrustedForm has populated the field
+      if (!certUrl || certUrl.trim() === '') {
+        const certUrlInput = document.querySelector('input[name="xxTrustedFormCertUrl"]') as HTMLInputElement;
+        certUrl = certUrlInput?.value || '';
+      }
+      // Additional fallback: check all inputs with TrustedForm name pattern
+      if (!certUrl || certUrl.trim() === '') {
+        const allCertInputs = document.querySelectorAll('input[id*="TrustedFormCertUrl"], input[name*="TrustedFormCertUrl"]');
+        for (let i = 0; i < allCertInputs.length; i++) {
+          const input = allCertInputs[i] as HTMLInputElement;
+          if (input.value && input.value.trim() !== '') {
+            certUrl = input.value;
+            break;
+          }
+        }
+      }
+      
+      // Log for debugging
+      if (certUrl && certUrl.trim() !== '') {
+        console.log('TrustedForm certificate URL found:', certUrl);
+      } else {
+        console.warn('TrustedForm certificate URL not found - checking DOM elements...');
+        // Debug: log all TrustedForm related elements
+        const debugElements = document.querySelectorAll('input[id*="TrustedForm"], input[name*="TrustedForm"]');
+        console.log('Found TrustedForm inputs:', Array.from(debugElements).map(el => ({
+          id: (el as HTMLInputElement).id,
+          name: (el as HTMLInputElement).name,
+          value: (el as HTMLInputElement).value
+        })));
       }
       
       // Retrieve loanAmount from localStorage
@@ -2354,7 +2383,7 @@ const FormPage = () => {
         // Address Information
         zip: zipCode.trim(),
         city: zipCodeCity.trim(),
-        state: driverLicenseState.trim(),
+        state: state.trim(),
         address: streetAddress.trim(),
         monthsAtAddress: addressDuration.trim(),
         homeOwnership: homeOwnership.trim(),
@@ -3909,12 +3938,27 @@ const FormPage = () => {
 
               {/* City Name Display */}
               {zipCodeCity && (
-                <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm sm:text-base text-blue-800 font-medium">
                     City: <span className="font-semibold">{zipCodeCity}</span>
                   </p>
                 </div>
               )}
+
+              {/* State Dropdown */}
+              <div className="mb-6">
+                <Dropdown
+                  options={driverLicenseStateOptions}
+                  value={state}
+                  onChange={(value) => {
+                    setState(value);
+                    markFieldTouched(16);
+                  }}
+                  placeholder="Select a state..."
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
 
               {/* Validation Error Message */}
               {stepValidationErrors[16] && (

@@ -123,8 +123,8 @@ const TrustedForm: React.FC<TrustedFormProps> = ({
   }, [onCertificateReady, onCertUrlReady, timeout]);
 
   return (
-    <>
-      {/* TrustedForm hidden fields */}
+    <form style={{ display: 'none' }} onSubmit={(e) => e.preventDefault()}>
+      {/* TrustedForm hidden fields - must be inside a form element */}
       <input 
         type="hidden" 
         id="xxTrustedFormCertUrl_0" 
@@ -137,7 +137,7 @@ const TrustedForm: React.FC<TrustedFormProps> = ({
         name="xxTrustedFormToken"
         ref={tokenRef}
       />
-    </>
+    </form>
   );
 };
 

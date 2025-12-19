@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
     // Map to internal variables for processing
     const phone = cellPhone || phoneNumber || body.phone || '';
     const homeOwner = homeOwnership || body.homeOwner || '';
-    const driverLicenseStateValue = state || driversLicenseState || oldDriverLicenseState || '';
+    const addressStateValue = state || body.addressState || '';
+    const driverLicenseStateValue = driversLicenseState || oldDriverLicenseState || '';
     const driverLicenseNumberValue = driversLicense || driverLicenseNumber || '';
     const employmentStatusValue = employmentType || employmentStatus || '';
     const employerValue = employerName || employer || '';
@@ -243,7 +244,13 @@ export async function POST(request: NextRequest) {
       if (error) validationErrors.push(error);
     }
     
-    if (!driverLicenseStateValue) validationErrors.push('State is required');
+    if (!addressStateValue) validationErrors.push('State is required');
+    else {
+      const error = validateState(addressStateValue);
+      if (error) validationErrors.push(error);
+    }
+    
+    if (!driverLicenseStateValue) validationErrors.push('Driver license state is required');
     else {
       const error = validateState(driverLicenseStateValue);
       if (error) validationErrors.push(error);
@@ -354,7 +361,7 @@ export async function POST(request: NextRequest) {
     const isBankruptcyRequired = hasFiledBankruptcy === 'yes';
     const bankruptcyFieldsValid = !isBankruptcyRequired || (bankruptcyChapter && bankruptcyStatus && bankruptcyDischargedInLast2Years);
     
-    if (!firstName || !lastName || !email || !phone || !zipCodeValue || !homeOwner || !debtAmount || !birthdateValue || !ssn || !streetAddressValue || !zipCodeCityValue || !addressDurationValue || !spendingPurpose || !creditScore || !employmentStatusValue || !paymentFrequencyValue || !monthlyIncome || !nextPayDate || !secondPayDate || !unsecuredDebtAmount || !monthlyHousingPayment || !hasCheckingAccountValue || !hasDirectDeposit || !bankAccountDurationValue || !bankRoutingNumber || !bankName || !bankAccountNumber || !employerValue || !employerDurationValue || !occupation || !vehicleStatus || !driverLicenseStateValue || !driverLicenseNumberValue || !isMilitaryMemberValue || !hasFiledBankruptcy || !bankruptcyFieldsValid) {
+    if (!firstName || !lastName || !email || !phone || !zipCodeValue || !homeOwner || !debtAmount || !birthdateValue || !ssn || !streetAddressValue || !zipCodeCityValue || !addressStateValue || !addressDurationValue || !spendingPurpose || !creditScore || !employmentStatusValue || !paymentFrequencyValue || !monthlyIncome || !nextPayDate || !secondPayDate || !unsecuredDebtAmount || !monthlyHousingPayment || !hasCheckingAccountValue || !hasDirectDeposit || !bankAccountDurationValue || !bankRoutingNumber || !bankName || !bankAccountNumber || !employerValue || !employerDurationValue || !occupation || !vehicleStatus || !driverLicenseStateValue || !driverLicenseNumberValue || !isMilitaryMemberValue || !hasFiledBankruptcy || !bankruptcyFieldsValid) {
       const missingFields = [];
       if (!firstName) missingFields.push('firstName');
       if (!lastName) missingFields.push('lastName');
@@ -447,10 +454,11 @@ export async function POST(request: NextRequest) {
       landing_page_url: request.headers.get('referer') || '',
       trustedform_cert_url: trustedformCertUrl || '',
       // Additional form fields
-      birthdate: birthdateValue || '',
+      date_of_birth: birthdateValue || '',
       ssn: ssn || '',
-      street_address: streetAddressValue || '',
+      address: streetAddressValue || '',
       city: zipCodeCityValue || '',
+      state: addressStateValue || '',
       monthsAtAddress: addressDurationValue || '',
       loanPurpose: spendingPurpose || '',
       creditScore: creditScore || '',
@@ -471,8 +479,8 @@ export async function POST(request: NextRequest) {
       monthsEmployed: employerDurationValue || '',
       employmentType: occupation || '',
       vehicleStatus: vehicleStatus || '',
-      driverLicenseState: driverLicenseStateValue || '',
-      driverLicense: driverLicenseNumberValue || '',
+      driversLicenseState: driverLicenseStateValue || '',
+      driversLicense: driverLicenseNumberValue || '',
       military: isMilitaryMemberValue || '',
       hasFiledBankruptcy: hasFiledBankruptcy || '',
       bankruptcyChapter: bankruptcyChapter || '',
@@ -483,6 +491,7 @@ export async function POST(request: NextRequest) {
 
     // Log form submission for monitoring (production logging)
     if (process.env.NODE_ENV === 'development') {
+      console.log('Form Data Submitted:', JSON.stringify(formData, null, 2));
     }
 
     // Send to LeadProsper
