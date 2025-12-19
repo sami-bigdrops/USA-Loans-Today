@@ -117,6 +117,8 @@ const FormPage = () => {
     setSsn,
     isSubmitting,
     setIsSubmitting,
+    isLookingUpBank,
+    setIsLookingUpBank,
     touchedFields,
     markFieldTouched,
     previousStepRef,
@@ -2482,6 +2484,20 @@ const FormPage = () => {
     return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
   };
 
+  const lookupBank = async (routing: string) => {
+    const res = await fetch(`/api/wise-routing?routing=${routing}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error);
+    }
+
+    return data as {
+      routingNumber: string;
+      bankName: string;
+    };
+  };
+
   const handleRoutingNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const cursorPosition = input.selectionStart || 0;
@@ -2527,6 +2543,27 @@ const FormPage = () => {
         routingNumberInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
       }
     });
+
+    // Auto-fetch bank name when routing number is complete (9 digits)
+    const digitsOnly = formatted.replace(/[^\d]/g, '');
+    if (digitsOnly.length === 9 && !isLookingUpBank) {
+      setIsLookingUpBank(true);
+      lookupBank(digitsOnly)
+        .then((data) => {
+          setBankName(data.bankName);
+          setIsLookingUpBank(false);
+        })
+        .catch((error) => {
+          console.error('Failed to lookup bank:', error);
+          setIsLookingUpBank(false);
+          // Don't show error to user, just silently fail - user can still enter bank name manually
+        });
+    } else if (digitsOnly.length !== 9) {
+      // Clear bank name if routing number is incomplete
+      if (bankName) {
+        setBankName('');
+      }
+    }
   };
 
   const handleRoutingNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -3412,11 +3449,13 @@ const FormPage = () => {
                     onBlur={() => markFieldTouched(12)}
                     placeholder="123-456-789"
                     maxLength={11}
+                    disabled={isLookingUpBank}
                     className={`
                       w-full px-4 py-3.5 text-base
                       border-2 rounded-lg
                       transition-all duration-200
                       focus:outline-none
+                      ${isLookingUpBank ? 'opacity-50 cursor-wait' : ''}
                       ${bankRoutingNumber && bankRoutingNumber.replace(/[^\d]/g, '').length === 9
                         ? 'border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
                         : 'border-gray-300 focus:border-[#313863] focus:ring-2 focus:ring-[#313863]/20'
@@ -3424,7 +3463,18 @@ const FormPage = () => {
                       text-[--text] font-medium
                     `}
                   />
+                  {isLookingUpBank && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg className="animate-spin h-5 w-5 text-[#313863]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
                 </div>
+                {isLookingUpBank && (
+                  <p className="mt-2 text-sm text-gray-600">Looking up bank name...</p>
+                )}
               </div>
 
               {/* Validation Error Message */}

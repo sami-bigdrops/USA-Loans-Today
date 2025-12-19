@@ -393,9 +393,9 @@ export async function POST(request: NextRequest) {
       if (!hasFiledBankruptcy) missingFields.push('hasFiledBankruptcy');
       // Only add bankruptcy fields to missing if bankruptcy is required (hasFiledBankruptcy === 'yes')
       if (isBankruptcyRequired) {
-        if (!bankruptcyChapter) missingFields.push('bankruptcyChapter');
-        if (!bankruptcyStatus) missingFields.push('bankruptcyStatus');
-        if (!bankruptcyDischargedInLast2Years) missingFields.push('bankruptcyDischargedInLast2Years');
+      if (!bankruptcyChapter) missingFields.push('bankruptcyChapter');
+      if (!bankruptcyStatus) missingFields.push('bankruptcyStatus');
+      if (!bankruptcyDischargedInLast2Years) missingFields.push('bankruptcyDischargedInLast2Years');
       }
       return NextResponse.json(
         { error: 'All required fields are missing', missingFields },

@@ -50,6 +50,7 @@ export const useFormState = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [ssn, setSsn] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLookingUpBank, setIsLookingUpBank] = useState<boolean>(false);
   const [touchedFields, setTouchedFields] = useState<Record<number, boolean>>({});
   
   const previousStepRef = useRef<number>(1);
@@ -164,6 +165,8 @@ export const useFormState = () => {
     setSsn,
     isSubmitting,
     setIsSubmitting,
+    isLookingUpBank,
+    setIsLookingUpBank,
     touchedFields,
     markFieldTouched,
     previousStepRef,
