@@ -489,11 +489,6 @@ export async function POST(request: NextRequest) {
       loanAmount: loanAmount || '',
     };
 
-    // Log form submission for monitoring (production logging)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Form Data Submitted:', JSON.stringify(formData, null, 2));
-    }
-
     // Send to LeadProsper
     const API_URL = process.env.LEADPROSPER_API_URL
     const response = await fetch(API_URL, {
