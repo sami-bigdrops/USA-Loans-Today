@@ -7,6 +7,7 @@ import ProgressBar from '@/app/components/ui/ProgressBar';
 import Dropdown from '@/app/components/ui/Dropdown';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/RadioGroup';
 import DatePicker from '@/app/components/ui/DatePicker';
+import BirthdatePicker from '@/app/components/ui/BirthdatePicker';
 import AddressAutocomplete from '@/app/components/ui/AddressAutocomplete';
 import { useFormState } from './hooks/useFormState';
 import { useValidation } from './hooks/useValidation';
@@ -2282,9 +2283,6 @@ const FormPage = () => {
       const cleanDebtAmount = debtAmount.replace(/[^0-9.]/g, '');
       const cleanMonthlyHousingPayment = monthlyHousingPayment.replace(/[^0-9.]/g, '');
       
-      // Clean SSN (remove dashes)
-      const cleanSsn = ssn.replace(/\D/g, '');
-      
       // Validate all fields
       const validationErrors: string[] = [];
       
@@ -2378,7 +2376,7 @@ const FormPage = () => {
         lastName: lastName.trim(),
         email: email.trim(),
         dob: birthdate.trim(),
-        ssn: cleanSsn,
+        ssn: ssn.trim(),
         
         // Address Information
         zip: zipCode.trim(),
@@ -5304,7 +5302,7 @@ const FormPage = () => {
 
               {/* Birthdate Input */}
               <div className="mb-6">
-                <DatePicker
+                <BirthdatePicker
                   value={birthdate}
                   onChange={(value) => {
                     handleBirthdateChange(value);
@@ -5317,7 +5315,11 @@ const FormPage = () => {
                     }
                   }}
                   placeholder="Select your birthdate"
-                  maxDate={new Date()} // Cannot select future dates
+                  maxDate={(() => {
+                    const today = new Date();
+                    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+                    return maxDate;
+                  })()} // User must be at least 18 years old
                   minDate={new Date(new Date().getFullYear() - 120, 0, 1)} // Allow up to 120 years ago
                 />
               </div>

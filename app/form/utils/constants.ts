@@ -36,9 +36,7 @@ export const creditScoreOptions = [
 export const employmentStatusOptions = [
   { value: 'employed', label: 'Employed' },
   { value: 'self-employed', label: 'Self-Employed' },
-  { value: 'social-security-or-disability', label: 'Social Security or Disability' },
   { value: 'benefits', label: 'Benefits' },
-  { value: 'unemployed', label: 'Unemployed' },
 ];
 
 export const paymentFrequencyOptions = [

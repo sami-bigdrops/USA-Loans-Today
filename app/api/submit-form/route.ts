@@ -455,7 +455,7 @@ export async function POST(request: NextRequest) {
       trustedform_cert_url: trustedformCertUrl || '',
       // Additional form fields
       date_of_birth: birthdateValue || '',
-      ssn: ssn || '',
+      ssn: ssn ? (ssn.includes('-') ? ssn : ssn.replace(/\D/g, '').replace(/(\d{3})(\d{2})(\d{4})/, '$1-$2-$3')) : '',
       address: streetAddressValue || '',
       city: zipCodeCityValue || '',
       state: addressStateValue || '',
@@ -470,14 +470,14 @@ export async function POST(request: NextRequest) {
       totalDebtAmount: unsecuredDebtAmount || '',
       monthlyHousingPayment: monthlyHousingPayment || '',
       bankAccountType: hasCheckingAccountValue || '',
-      payType: hasDirectDeposit || '',
+      payType: payTypeValue || '',
       monthsAtBank: bankAccountDurationValue || '',
       bankRoutingNumber: bankRoutingNumber || '',
       bankName: bankName || '',
       bankAccountNumber: bankAccountNumber || '',
       employerName: employerValue || '',
       monthsEmployed: employerDurationValue || '',
-      employmentType: occupation || '',
+      employmentType: employmentStatusValue || '',
       vehicleStatus: vehicleStatus || '',
       driversLicenseState: driverLicenseStateValue || '',
       driversLicense: driverLicenseNumberValue || '',
@@ -488,6 +488,9 @@ export async function POST(request: NextRequest) {
       bankruptcyDischargedInLast2Years: bankruptcyDischargedInLast2Years || '',
       loanAmount: loanAmount || '',
     };
+
+    // Print formData to terminal
+    // console.log('Form Data:', JSON.stringify(formData, null, 2));
 
     // Send to LeadProsper
     const API_URL = process.env.LEADPROSPER_API_URL
