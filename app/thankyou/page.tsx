@@ -341,13 +341,20 @@ function ThankYouContent() {
 
                 {/* Main Message */}
                 <div className={isAccepted ? 'mb-8' : 'mb-0'}>
-                  <p className="text-2xl text-center leading-relaxed font-normal text-gray-900">
-                    {isAccepted ? (
-                      <>Congratulations! {firstName ? <><span className="font-bold">{firstName}</span>, </> : ''}your request has been accepted.</>
-                    ) : (
-                      <>Sorry! {firstName ? <><span className="font-bold">{firstName}</span>, </> : ''}your request has been rejected.</>
-                    )}
-                  </p>
+                  {isAccepted ? (
+                    <p className="text-2xl text-center leading-relaxed font-normal text-gray-900">
+                      Congratulations! {firstName ? <><span className="font-bold">{firstName}</span>, </> : ''}your request has been accepted.
+                    </p>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-2xl leading-relaxed font-normal text-gray-900 mb-3">
+                        Thank you for your interest{firstName ? <>, <span className="font-bold">{firstName}</span></> : ''}.
+                      </p>
+                      <p className="text-lg leading-relaxed font-normal text-gray-700">
+                        Unfortunately, after reviewing your request, we&apos;ve determined that it doesn&apos;t meet our necessary qualifications. We appreciate your understanding.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Information Cards */}
