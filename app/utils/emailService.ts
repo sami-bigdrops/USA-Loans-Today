@@ -1,3 +1,5 @@
+// Email service disabled - all code commented out
+/*
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 // Initialize SES client only if AWS credentials are available
@@ -268,3 +270,4 @@ export async function sendTestEmail(): Promise<boolean> {
     return false;
   }
 }
+*/

@@ -533,7 +533,7 @@ export async function POST(request: NextRequest) {
       const successResponse = { 
         success: true, 
         message: 'Form submitted successfully',
-        redirectUrl: `/thankyou?email=${encodeURIComponent(email.trim())}`,
+        redirectUrl: `/thankyou?email=${encodeURIComponent(email.trim())}&status=${encodeURIComponent(result.status)}&firstName=${encodeURIComponent(firstName.trim())}`,
         leadProsperStatus: result.status,
         accessToken,
         expiresAt

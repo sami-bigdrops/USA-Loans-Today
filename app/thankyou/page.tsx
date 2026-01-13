@@ -1,21 +1,11 @@
 'use client'
 
-import React, { useEffect, useState, Suspense, useCallback } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { Check, X } from 'lucide-react'
 
 import { useSearchParams } from 'next/navigation'
-
-const ads = [
-  {
-    image: '/ad3.jpg',
-    link: 'https://www.platinum-home-track.com/28KL6/49FHNSP/?uid=114&sub1=ult_${utmParams.utm_source}&sub2=${utmParams.utm_id}&sub3=${utmParams.utm_s1}'
-  },
-  {
-    image: '/ad1.png',
-    link: 'https://www.platinum-home-track.com/28KL6/49FHNSP/?uid=112&sub1=ult_${utmParams.utm_source}&sub2=${utmParams.utm_id}&sub3=${utmParams.utm_s1}'
-  }
-]
 
 interface UtmParams {
   utm_source: string
@@ -33,135 +23,211 @@ function ThankYouContent() {
     utm_id: '',
     utm_s1: ''
   })
-  const [emailSent, setEmailSent] = useState(false)
+  // Email service disabled
+  // const [emailSent, setEmailSent] = useState(false)
   const [buyer, setBuyer] = useState<string | null>(null)
-  const [hasProcessedUrl, setHasProcessedUrl] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
+  const [firstName, setFirstName] = useState<string>('')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [hasProcessedUrl, setHasProcessedUrl] = useState(false) // Used in commented code below
 
-
-  // Function to send welcome email from thank you page
-  const sendWelcomeEmailFromThankYou = useCallback(async () => {
-    try {
-      // Get email from URL parameters (passed from webhook)
-      const emailFromUrl = searchParams.get('email');
-      
-      // Fallback to localStorage if URL parameter not available
-      const formData = localStorage.getItem('form_data');
-      const emailFromStorage = formData ? JSON.parse(formData).email : null;
-      
-      const email = emailFromUrl || emailFromStorage;
-      
-      
-      if (!email) {
-        return;
-      }
-      
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email
-        })
-      });
-      
-      if (response.ok) {
-        setEmailSent(true);
-      }
-    } catch {
-    }
-  }, [searchParams]);
+  // Email service disabled
+  // // Function to send welcome email from thank you page
+  // const sendWelcomeEmailFromThankYou = useCallback(async () => {
+  //   try {
+  //     // Get email from URL parameters (passed from webhook)
+  //     const emailFromUrl = searchParams.get('email');
+  //     
+  //     // Fallback to localStorage if URL parameter not available
+  //     const formData = localStorage.getItem('form_data');
+  //     const emailFromStorage = formData ? JSON.parse(formData).email : null;
+  //     
+  //     const email = emailFromUrl || emailFromStorage;
+  //     
+  //     
+  //     if (!email) {
+  //       return;
+  //     }
+  //     
+  //     const response = await fetch('/api/send-email', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         email: email
+  //       })
+  //     });
+  //     
+  //     if (response.ok) {
+  //       setEmailSent(true);
+  //     }
+  //   } catch {
+  //   }
+  // }, [searchParams]);
 
   // Protection useEffect - runs first to check access authorization
+  // COMMENTED OUT FOR DEVELOPMENT - Allow direct access to /thankyou
   useEffect(() => {
-    // Prevent multiple runs
-    if (hasProcessedUrl) return;
-    
-    const checkAccess = async () => {
-      try {
-        // Check if user came from webhook (has email parameter)
-        const emailFromUrl = searchParams.get('email');
-        const buyerFromUrl = searchParams.get('buyer');
-        
-        if (emailFromUrl) {
-          // User came from webhook or form submission with email - allow access
+    // DEVELOPMENT: Allow direct access
+    const timer = setTimeout(() => {
           setIsAuthorized(true);
           setIsLoading(false);
-          setHasProcessedUrl(true);
           
-          // Set buyer from URL parameters
+      const buyerFromUrl = searchParams.get('buyer');
           if (buyerFromUrl) {
             setBuyer(buyerFromUrl);
           }
           
-          // Clean URL by removing query parameters after extracting the data
-          setTimeout(() => {
-            if (typeof window !== 'undefined') {
-              const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-              window.history.replaceState({}, document.title, cleanUrl);
-            }
-          }, 100);
-          
-          // Send welcome email if not already sent
-          if (!emailSent) {
-            sendWelcomeEmailFromThankYou();
-          }
-          return;
-        }
-
-        // Check for access token in localStorage (for direct access)
-        const token = localStorage.getItem('thankyou_token');
-        const expiresAt = localStorage.getItem('thankyou_expires');
-
-        if (!token || !expiresAt) {
-          router.replace('/');
-          return;
-        }
-
-        // Check if token has expired
-        const currentTime = Date.now();
-        const tokenExpiry = parseInt(expiresAt, 10);
-        
-        if (currentTime > tokenExpiry) {
-          localStorage.removeItem('thankyou_token');
-          localStorage.removeItem('thankyou_expires');
-          router.replace('/');
-          return;
-        }
-
-        // Validate token against server (optional additional security check)
-        try {
-          const response = await fetch('/api/validate-access', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-          });
-          
-          if (!response.ok) {
-            throw new Error('Token validation failed');
-          }
-        } catch {
-          // If validation endpoint doesn't exist or fails, we'll rely on localStorage validation
-        }
-
-        // All checks passed - authorize access
-        setIsAuthorized(true);
-        
-        // Clear the token to prevent reuse (one-time access)
-        localStorage.removeItem('thankyou_token');
-        localStorage.removeItem('thankyou_expires');
-        
-        // Send welcome email if not already sent
-        if (!emailSent) {
-          sendWelcomeEmailFromThankYou();
-        }
-      } catch {
-        router.replace('/');
-      } finally {
-        setIsLoading(false);
+      const statusFromUrl = searchParams.get('status');
+      if (statusFromUrl) {
+        setStatus(statusFromUrl);
       }
-    };
-
-    checkAccess();
-  }, [router, emailSent, sendWelcomeEmailFromThankYou, hasProcessedUrl, searchParams]);
+      
+      const firstNameFromUrl = searchParams.get('firstName');
+      if (firstNameFromUrl) {
+        setFirstName(firstNameFromUrl);
+      } else {
+        // Fallback to localStorage if URL parameter not available
+        const formData = localStorage.getItem('form_data');
+        const firstNameFromStorage = formData ? JSON.parse(formData).firstName : null;
+        if (firstNameFromStorage) {
+          setFirstName(firstNameFromStorage);
+        }
+      }
+    }, 0);
+    
+    return () => clearTimeout(timer);
+    
+    // ORIGINAL CODE - COMMENTED FOR DEVELOPMENT
+    // // Prevent multiple runs
+    // if (hasProcessedUrl) return;
+    // 
+    // const checkAccess = async () => {
+    //   try {
+    //     // Check if user came from webhook (has email parameter)
+    //     const emailFromUrl = searchParams.get('email');
+    //     const buyerFromUrl = searchParams.get('buyer');
+    //     const statusFromUrl = searchParams.get('status');
+    //     const firstNameFromUrl = searchParams.get('firstName');
+    //     
+    //     if (emailFromUrl) {
+    //       // User came from webhook or form submission with email - allow access
+    //       setIsAuthorized(true);
+    //       setIsLoading(false);
+    //       setHasProcessedUrl(true);
+    //       
+    //       // Set buyer from URL parameters
+    //       if (buyerFromUrl) {
+    //         setBuyer(buyerFromUrl);
+    //       }
+    //       
+    //       // Set status from URL parameters
+    //       if (statusFromUrl) {
+    //         setStatus(statusFromUrl);
+    //       }
+    //       
+    //       // Set firstName from URL parameters
+    //       if (firstNameFromUrl) {
+    //         setFirstName(firstNameFromUrl);
+    //       } else {
+    //         // Fallback to localStorage if URL parameter not available
+    //         const formData = localStorage.getItem('form_data');
+    //         const firstNameFromStorage = formData ? JSON.parse(formData).firstName : null;
+    //         if (firstNameFromStorage) {
+    //           setFirstName(firstNameFromStorage);
+    //         }
+    //       }
+    //       
+    //       // Clean URL by removing query parameters after extracting the data
+    //       setTimeout(() => {
+    //         if (typeof window !== 'undefined') {
+    //           const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    //           window.history.replaceState({}, document.title, cleanUrl);
+    //         }
+    //       }, 100);
+    //       
+    //       // Email service disabled
+    //       // // Send welcome email if not already sent
+    //       // if (!emailSent) {
+    //       //   sendWelcomeEmailFromThankYou();
+    //       // }
+    //       return;
+    //     }
+    //
+    //     // Check for access token in localStorage (for direct access)
+    //     const token = localStorage.getItem('thankyou_token');
+    //     const expiresAt = localStorage.getItem('thankyou_expires');
+    //
+    //     if (!token || !expiresAt) {
+    //       router.replace('/');
+    //       return;
+    //     }
+    //
+    //     // Check if token has expired
+    //     const currentTime = Date.now();
+    //     const tokenExpiry = parseInt(expiresAt, 10);
+    //     
+    //     if (currentTime > tokenExpiry) {
+    //       localStorage.removeItem('thankyou_token');
+    //       localStorage.removeItem('thankyou_expires');
+    //       router.replace('/');
+    //       return;
+    //     }
+    //
+    //     // Validate token against server (optional additional security check)
+    //     try {
+    //       const response = await fetch('/api/validate-access', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ token })
+    //       });
+    //       
+    //       if (!response.ok) {
+    //         throw new Error('Token validation failed');
+    //       }
+    //     } catch {
+    //       // If validation endpoint doesn't exist or fails, we'll rely on localStorage validation
+    //     }
+    //
+    //     // All checks passed - authorize access
+    //     setIsAuthorized(true);
+    //     
+    //     // Get status and firstName from URL if available (for token-based access)
+    //     const statusFromTokenUrl = searchParams.get('status');
+    //     const firstNameFromTokenUrl = searchParams.get('firstName');
+    //     
+    //     if (statusFromTokenUrl) {
+    //       setStatus(statusFromTokenUrl);
+    //     }
+    //     
+    //     if (firstNameFromTokenUrl) {
+    //       setFirstName(firstNameFromTokenUrl);
+    //     } else {
+    //       // Fallback to localStorage if URL parameter not available
+    //       const formData = localStorage.getItem('form_data');
+    //       const firstNameFromStorage = formData ? JSON.parse(formData).firstName : null;
+    //       if (firstNameFromStorage) {
+    //         setFirstName(firstNameFromStorage);
+    //       }
+    //     }
+    //     
+    //     // Clear the token to prevent reuse (one-time access)
+    //     localStorage.removeItem('thankyou_token');
+    //     localStorage.removeItem('thankyou_expires');
+    //     
+    //     // Email service disabled
+    //     // // Send welcome email if not already sent
+    //     // if (!emailSent) {
+    //     //   sendWelcomeEmailFromThankYou();
+    //     // }
+    //   } catch {
+    //     router.replace('/');
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // };
+    //
+    // checkAccess();
+  }, [router, hasProcessedUrl, searchParams]);
 
   useEffect(() => {
     // Skip UTM parameter processing if not authorized
@@ -188,24 +254,36 @@ function ThankYouContent() {
     const utm_s1 = searchParams.get('utm_s1') || ''
 
     // If URL parameters exist, use them and save to cookies
+    let timeoutId: NodeJS.Timeout;
     if (utm_source || utm_id || utm_s1) {
       if (utm_source) setCookie('subid1', utm_source);
       if (utm_id) setCookie('subid2', utm_id);
       if (utm_s1) setCookie('subid3', utm_s1);
       
-      setUtmParams({ utm_source, utm_id, utm_s1 })
+      // Defer state update to avoid synchronous setState in effect
+      timeoutId = setTimeout(() => {
+        setUtmParams({ utm_source, utm_id, utm_s1 });
+      }, 0);
     } else {
       // If no URL parameters, try to read from cookies
       const cookieUtmSource = getCookie('subid1') || '';
       const cookieUtmId = getCookie('subid2') || '';
       const cookieUtmS1 = getCookie('subid3') || '';
       
+      // Defer state update to avoid synchronous setState in effect
+      timeoutId = setTimeout(() => {
       setUtmParams({
         utm_source: cookieUtmSource,
         utm_id: cookieUtmId,
         utm_s1: cookieUtmS1
-      })
+        });
+      }, 0);
     }
+
+    // Cleanup timeout on unmount or dependency change
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [searchParams, isAuthorized])
 
   // Show loading state while checking authorization
@@ -225,103 +303,70 @@ function ThankYouContent() {
     return null;
   }
 
+  const isAccepted = status === 'ACCEPTED' || status === 'DUPLICATED' || status === 'ERROR';
+
   return (
-    <main>
+    <main className="bg-linear-to-br from-gray-50 via-white to-gray-50">
       {/* Thank You Section */}
-      <section id="thankyou" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="thankyou-content text-center max-w-2xl mx-auto">
-            <div className="mb-8">
+      <section id="thankyou" className="py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto">
+            {/* Main Content Card */}
+            <div className="rounded-2xl shadow-xl border border-gray-100 overflow-hidden py-8">
+              {/* Status Icon Section */}
+              <div className={`relative bg-linear-to-br from-gray-50 to-white px-6 ${isAccepted ? 'pt-12 pb-8' : 'pt-8 pb-6'}`}>
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className={`absolute inset-0 rounded-full ${isAccepted ? 'bg-green-100 animate-ping' : 'bg-red-100 animate-ping'} opacity-75`}></div>
+                    <div className={`relative rounded-full ${isAccepted ? 'bg-green-50' : 'bg-red-50'} p-6 border-4 ${isAccepted ? 'border-green-500' : 'border-red-500'}`}>
+                      {isAccepted ? (
+                        <Check className="size-16 text-green-600" strokeWidth={3} />
+                      ) : (
+                        <X className="size-16 text-red-600" strokeWidth={3} />
+                      )}
+                    </div>
+                  </div>
             </div>
-            <h3 className="text-4xl font-bold text-gray-800 mb-12">
-              Thank you!
-            </h3>
-            
-            {/* Show buyer logo only if buyer is known and not empty */}
-            {buyer && buyer.trim() !== '' && (
-              <div className="mb-8">
-                <Image 
-                  src={`/buyer/${buyer.toLowerCase().replace(/\s+/g, '-')}.png`}
-                  alt={`${buyer} Logo`}
-                  width={200}
-                  height={100}
-                  className="mx-auto h-20 w-auto mb-4"
-                />
-              </div>
-            )}
-            
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Congratulations! You have been matched with our partner. You will be contacted by a Loan Specialist shortly.
-            </p>
-            
-            {/* Email confirmation message */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-              <div className="flex items-start space-x-3">
-                <div>
-                  <p className="text-green-800 font-medium mb-2">
-                    A confirmation message has been sent to your email address.
-                  </p>
-                  <p className="text-green-700 text-sm">
-                    The message contains information about USA Loans Today and next steps. Please make sure to check your spam folder if you don&apos;t see it in your inbox.
-                  </p>
+                
+                {/* Status Badge */}
+                <div className="flex justify-center mb-4">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${isAccepted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {isAccepted ? 'Request Accepted' : 'Request Rejected'}
+                  </span>
                 </div>
               </div>
+
+              {/* Content Section */}
+              <div className={`px-6 sm:px-8 lg:px-12 ${isAccepted ? 'py-2' : 'py-6'}`}>
+
+                {/* Main Message */}
+                <div className={isAccepted ? 'mb-8' : 'mb-0'}>
+                  <p className="text-2xl text-center leading-relaxed font-normal text-gray-900">
+                    {isAccepted ? (
+                      <>Congratulations! {firstName ? <><span className="font-bold">{firstName}</span>, </> : ''}your request has been accepted.</>
+                    ) : (
+                      <>Sorry! {firstName ? <><span className="font-bold">{firstName}</span>, </> : ''}your request has been rejected.</>
+                    )}
+                  </p>
+                </div>
+
+                {/* Information Cards */}
+                {isAccepted && (
+                  <div className="space-y-4 mb-6">
+                    {/* Next Steps Card */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                        What Happens Next?
+                      </h3>
+                      <p className="text-blue-800">
+                      Please check your mobile phone provided in the application to continue as the approval link has been sent there.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            {/* <div className="thankyou-contact-container bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <h4 className="text-xl font-semibold text-gray-800 mb-3">
-                For immediate assistance
-              </h4>
-              <p className="text-gray-600">
-                Call us at{' '}
-                <a 
-                  href="tel:+18664951543" 
-                  className="text-red-600 font-semibold hover:text-red-700 transition-colors"
-                >
-                  1-(866)-495-1543
-                </a>
-                .
-              </p>
-            </div> */}
-          </div>
-        </div>
-      </section>
 
-      {/* Thank You Divider */}
-      <div className="thankyou-divider h-1 bg-linear-to-r from-gray-200 to-gray-300"></div>
-
-      {/* Ad Section */}
-      <section id="ad" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="ad-content text-center max-w-4xl mx-auto">
-            <p className="text-xl text-gray-700 mb-8 font-medium">
-              In addition to loans, here are {ads.length} great offers.
-            </p>
-
-            <div className="ad-images grid grid-cols-1 md:grid-cols-1 gap-8">
-              {ads.map((ad, index) => {
-                // Replace template variables in the ad link
-                const processedLink = ad.link
-                  .replace('${utmParams.utm_source}', utmParams.utm_source || '')
-                  .replace('${utmParams.utm_id}', utmParams.utm_id || '')
-                  .replace('${utmParams.utm_s1}', utmParams.utm_s1 || '');
-                
-                return (
-                  <a 
-                    key={index}
-                    href={processedLink}
-                    className="block transition-transform hover:scale-105"
-                  >
-                    <Image 
-                      src={ad.image} 
-                      alt="Ads Image" 
-                      width={400} 
-                      height={300}
-                      className="w-full h-auto rounded-lg shadow-md"
-                    />
-                  </a>
-                );
-              })}
-            </div>
           </div>
         </div>
       </section>
